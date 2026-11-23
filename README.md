@@ -2,14 +2,19 @@
 
 [![CI](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions/workflows/ci.yml/badge.svg)](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions/workflows/ci.yml)
 
-Lean 4 / Mathlib proofs of the two textbook characterisations of Wolstenholme primes stated in
+Lean 4 / Mathlib proofs of the three textbook statements about Wolstenholme primes in
 [Formal Conjectures](https://github.com/google-deepmind/formal-conjectures)
-(`FormalConjectures/Wikipedia/WolstenholmePrime.lean`), where they are currently `sorry`:
+(`FormalConjectures/Wikipedia/WolstenholmePrime.lean`):
 
 | Theorem | Statement |
 |---|---|
+| `wolstenholme_theorem` | `p > 3 → p.Prime → C(2p−1, p−1) ≡ 1 [MOD p ^ 3]` (Wolstenholme, 1862) |
 | `wolstenholme_harmonic` | `IsWolstenholmePrime p ↔ p > 7 ∧ p.Prime ∧ ↑(p ^ 3) ∣ (harmonic (p - 1)).num` |
 | `wolstenholme_bernoulli` | `IsWolstenholmePrime p ↔ p > 7 ∧ p.Prime ∧ ↑p ∣ (bernoulli' (p - 3)).num` |
+
+In Formal Conjectures, the last two are `sorry`. The first links to an external short proof; here
+it is a corollary of the stronger congruence `C(2p−1, p−1) − 1 ≡ 2p·H_{p−1} (mod p⁴)`, together
+with `H_{p−1} ≡ 0 (mod p²)` (`harmonic_num_dvd_sq`).
 
 Here `IsWolstenholmePrime p` means `p > 7`, `p` is prime, and `C(2p−1, p−1) ≡ 1 (mod p⁴)`.
 
@@ -18,21 +23,14 @@ every even index, in particular at `p − 3` for odd `p`, so the statement is th
 
 ## Verification status
 
-Verified. The CI run on a clean clone
-([run 45191292172](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions/runs/45191292172)) did three things:
+Every push runs CI on a clean clone ([Actions](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions)).
+The CI fetches the Mathlib cache for `0df444a3`, compiles everything with `import Mathlib`, and
+runs `scripts/check_axioms.sh`. The script prints `#print axioms` for every exported theorem and
+fails unless each depends only on `[propext, Classical.choice, Quot.sound]`. The first run
+([45191292172](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions/runs/45191292172))
+compiled with no errors or warnings.
 
-1. It fetched the Mathlib cache for `0df444a3`.
-2. It compiled both files with `import Mathlib`, with no errors or warnings.
-3. It reported:
-
-```
-'WolstenholmePrime.wolstenholme_harmonic' depends on axioms: [propext, Classical.choice, Quot.sound]
-'WolstenholmePrime.wolstenholme_bernoulli' depends on axioms: [propext, Classical.choice, Quot.sound]
-'WolstenholmeHarmonic.wolstenholme_harmonic' depends on axioms: [propext, Classical.choice, Quot.sound]
-'WolstenholmeHarmonic.wolstenholme_bernoulli' depends on axioms: [propext, Classical.choice, Quot.sound]
-```
-
-Both results are classical (Glaisher, 1900). What this repository adds is a complete
+All three results are classical (Wolstenholme 1862, Glaisher 1900). What this repository adds is a complete
 formalization: no `sorry`, only Lean's standard axioms, and no use of Kummer's congruence,
 which Mathlib does not have.
 
@@ -43,10 +41,10 @@ which Mathlib does not have.
 - `WolstenholmeHarmonic.lean`: the proofs, about 1,100 lines. They are organised in reusable layers:
   generic symmetric-function identities, reduction of rationals into `ZMod m`, then the
   number theory.
-- `FormalConjecturesCheck.lean`: the Formal Conjectures definition and both statements, copied
-  verbatim in their own namespace (Apache-2.0, see the file header), each proved in one line from
-  the main file.
-- `scripts/check_axioms.sh`: fails unless all four theorems depend only on
+- `FormalConjecturesCheck.lean`: the Formal Conjectures definition and all three statements, copied
+  verbatim in their own namespace (Apache-2.0, see the file header), each proved in a few lines
+  from the main file.
+- `scripts/check_axioms.sh`: fails unless all seven exported theorems depend only on
   `propext`, `Classical.choice` and `Quot.sound`. This also catches any `sorry`.
 
 ## Proof strategy
@@ -108,7 +106,7 @@ CI (`.github/workflows/ci.yml`) runs the same steps on every push from a clean c
 
 The formalization was written with Claude (Anthropic), under the direction of
 José Cláudio da Silva Junior, who reviewed it. The proof route was cross-checked with ChatGPT.
-All four theorem declarations are kernel-checked, and the axiom audit reports only Lean's standard
+All exported theorem declarations are kernel-checked, and the axiom audit reports only Lean's standard
 axioms (`propext`, `Classical.choice`, `Quot.sound`). As with any formal proof, the results are relative
 to the definitions used and the imported Mathlib theorems.
 

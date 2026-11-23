@@ -40,6 +40,8 @@ A human-readable proof, with no Lean, is in `PROOF.md`.
    * Step A `sum_pow_p_sub_three`: `Σ k^{p−3} ≡ p·B_{p−3} (mod p²)` (Faulhaber, von Staudt–Clausen);
    * Step B `three_S_two_eq`: `3·H_{p−1,2} ≡ 2·Σ k^{p−3} (mod p²)` (doubling `k ↦ 2k mod p`);
    * `wolstenholme_bernoulli_core`, then `wolstenholme_bernoulli`.
+6. **Corollaries.** `harmonic_num_dvd_sq`: `p² ∣ num(H_{p−1})`, and
+   `wolstenholme_theorem_mod_p_cube`: `C(2p−1, p−1) ≡ 1 (mod p³)` (Wolstenholme, 1862).
 
 Toolchain: Lean v4.33.1, Mathlib 0df444a3 (as in Formal Conjectures). No `sorry`; both final
 theorems depend only on [propext, Classical.choice, Quot.sound]. `IsWolstenholmePrime` here is a
@@ -1190,6 +1192,51 @@ theorem wolstenholme_bernoulli (p : ℕ) :
     refine ⟨h7, hpr, ?_⟩
     rw [← bernoulli_eq_bernoulli'_of_ne_one (by omega)] at hdvd
     exact (wolstenholme_bernoulli_core (by omega)).2 hdvd
+
+
+/-! ### Corollaries: the classical Wolstenholme congruences -/
+
+/-- `p·H_{p−1} ≡ 0 (mod p³)`, i.e. `H_{p−1} ≡ 0 (mod p²)`, written in `ZMod p³`.
+From the pairing lemma `2·S₁ + p·S₂ ≡ 0 (mod p³)` and `S₂ ≡ 0 (mod p)`. -/
+theorem p_mul_S_one_cube (hp5 : 5 ≤ p) : (p : ZMod (p ^ 3)) * S (p ^ 3) p 1 = 0 := by
+  -- the pairing lemma, reduced from `ZMod p⁴` to `ZMod p³`
+  have hpair3 : 2 * S (p ^ 3) p 1 + (p : ZMod (p ^ 3)) * S (p ^ 3) p 2 = 0 := by
+    have h := harmonic_pairing hp5
+    rw [natCast_mul_eq_zero_iff] at h
+    rw [map_add, map_mul, map_mul, map_ofNat, map_natCast, castHom_S (by norm_num : 3 ≤ 4) 1,
+      castHom_S (by norm_num : 3 ≤ 4) 2] at h
+    exact h
+  -- `S₂ ≡ 0 (mod p)` (power sums, `p − 1 ∤ 2`), so `S₂ = p·y`
+  obtain ⟨y, hy⟩ : ∃ y : ZMod (p ^ 3), S (p ^ 3) p 2 = (p : ZMod (p ^ 3)) * y := by
+    refine exists_eq_p_mul (by norm_num) _ ?_
+    rw [castHom_S_one (by norm_num) 2]
+    exact harmonic_sum_pow_mod (fun h => by have := Nat.le_of_dvd (by norm_num) h; omega)
+  have hP3 : (p : ZMod (p ^ 3)) ^ 3 = 0 := by rw [← Nat.cast_pow, ZMod.natCast_self]
+  -- `2·(p·S₁) = p·(2S₁ + p·S₂) − p³·y = 0`, and `2` is a unit
+  have h2 : 2 * ((p : ZMod (p ^ 3)) * S (p ^ 3) p 1) = 0 := by
+    rw [hy] at hpair3
+    linear_combination (p : ZMod (p ^ 3)) * hpair3 - y * hP3
+  exact ((two_isUnit_pow hp5 3).mul_right_eq_zero).1 h2
+
+/-- The classical congruence `H_{p−1} ≡ 0 (mod p²)` (Wolstenholme 1862), for primes `p ≥ 5`:
+`p²` divides the numerator of `H_{p−1}`. -/
+theorem harmonic_num_dvd_sq (hp5 : 5 ≤ p) : ((p ^ 2 : ℕ) : ℤ) ∣ (harmonic (p - 1)).num := by
+  have hp : p.Prime := Fact.out
+  have h := (natCast_mul_eq_zero_iff_pow hp.pos (n := 2) _).1 (p_mul_S_one_cube hp5)
+  rw [castHom_S (by norm_num : 2 ≤ 3) 1] at h
+  rw [← ratToZMod_eq_zero_iff 2 _ harmonic_den_not_dvd, ratToZMod_harmonic]
+  exact h
+
+/-- **Wolstenholme's theorem** (1862): `C(2p−1, p−1) ≡ 1 (mod p³)` for every prime `p ≥ 5`.
+Reduce `C − 1 ≡ 2p·H_{p−1} (mod p⁴)` mod `p³` and use `p·H_{p−1} ≡ 0 (mod p³)`. -/
+theorem wolstenholme_theorem_mod_p_cube (hp5 : 5 ≤ p) :
+    (2 * p - 1).choose (p - 1) ≡ 1 [MOD p ^ 3] := by
+  have h3 := congrArg (ZMod.castHom (pow_dvd_pow p (by norm_num : 3 ≤ 4)) (ZMod (p ^ 3)))
+    (binomial_harmonic_congruence hp5)
+  rw [map_sub, map_one, map_natCast, map_mul, map_mul, map_ofNat, map_natCast,
+    castHom_S (by norm_num : 3 ≤ 4) 1] at h3
+  rw [← ZMod.natCast_eq_natCast_iff, Nat.cast_one]
+  linear_combination h3 + 2 * p_mul_S_one_cube hp5
 
 end BernoulliPart
 

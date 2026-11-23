@@ -6,8 +6,9 @@ echo "$out"
 expected="depends on axioms: [propext, Classical.choice, Quot.sound]"
 n=$(grep -c "depends on axioms" <<<"$out" || true)
 ok=$(grep -cF "$expected" <<<"$out" || true)
-if [ "$n" -ne 4 ] || [ "$ok" -ne 4 ]; then
-  echo "Axiom check FAILED ($ok of 4 theorems use only the standard axioms)." >&2
+want=$(grep -c "^#print axioms" scripts/Axioms.lean)
+if [ "$n" -ne "$want" ] || [ "$ok" -ne "$want" ]; then
+  echo "Axiom check FAILED ($ok of $want theorems use only the standard axioms)." >&2
   exit 1
 fi
-echo "Axiom check passed: 4 of 4 theorems use only propext, Classical.choice, Quot.sound."
+echo "Axiom check passed: $ok of $want theorems use only propext, Classical.choice, Quot.sound."

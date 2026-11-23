@@ -87,6 +87,13 @@ By Lemma 5, `−p²S₂ = 2pS₁`, so `2(C − 1) = 4pS₁`. Cancel the unit `2`
 
 The last equivalence uses the notation section: `H_{p−1} mod p³ = S₁`.
 
+**Corollary (Wolstenholme, 1862; `harmonic_num_dvd_sq`, `wolstenholme_theorem_mod_p_cube`).**
+`H_{p−1} ≡ 0 (mod p²)` and `C ≡ 1 (mod p³)`.
+
+*Proof.* Reduce Lemma 5 to `ℤ/p³`, which gives `2S₁ + p·S₂ ≡ 0`. Since `S₂ = p·y` by Lemma 1,
+`2p·S₁ = −p³y ≡ 0 (mod p³)`, so `p·S₁ ≡ 0 (mod p³)`, that is, `S₁ ≡ 0 (mod p²)`. Theorem A
+reduced mod `p³` then gives `C − 1 ≡ 2p·S₁ ≡ 0`. ∎
+
 ## Part II: `p⁴ ∣ C − 1 ⇔ p ∣ num(B_{p−3})`, hence `wolstenholme_bernoulli`
 
 **Step 0 (from Lemma 5).** Reducing Lemma 5 from `ℤ/p⁴` to `ℤ/p³` gives `2S₁ + p·S₂ ≡ 0 (mod p³)`.

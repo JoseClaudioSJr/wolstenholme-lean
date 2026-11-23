@@ -1,6 +1,9 @@
 import FormalConjecturesCheck
 
+#print axioms WolstenholmePrime.wolstenholme_theorem
 #print axioms WolstenholmePrime.wolstenholme_harmonic
 #print axioms WolstenholmePrime.wolstenholme_bernoulli
 #print axioms WolstenholmeHarmonic.wolstenholme_harmonic
 #print axioms WolstenholmeHarmonic.wolstenholme_bernoulli
+#print axioms WolstenholmeHarmonic.wolstenholme_theorem_mod_p_cube
+#print axioms WolstenholmeHarmonic.harmonic_num_dvd_sq
