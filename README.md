@@ -28,7 +28,7 @@ every even index, in particular at `p − 3` for odd `p`, so the statement is th
 ## Verification status
 
 Every push runs CI on a clean clone ([Actions](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions)).
-The CI fetches the Mathlib cache for `0df444a3`, compiles everything with `import Mathlib`, and
+The CI fetches the Mathlib cache for Mathlib `v4.36.0`, compiles everything, and
 runs `scripts/check_axioms.sh`. The script prints `#print axioms` for every exported theorem and
 fails unless each depends only on `[propext, Classical.choice, Quot.sound]`. The first run
 ([45191292172](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions/runs/45191292172))
@@ -58,7 +58,9 @@ that Jensen's theorem needs; see below. Part II does not use it.)
   copied verbatim, and the reduction of `infinitude_of_irregularprimes` to Kummer's criterion.
 - `Erdos291Check.lean`: the Formal Conjectures definitions for Erdős Problem 291, copied verbatim,
   and a proof of `erdos_291.variants.steinerberger_generalization` (see below).
-- `scripts/check_axioms.sh`: fails unless every theorem listed in `scripts/Axioms.lean` depends only on
+- `Challenge.lean`, `comparator.json`, `formalization.yaml`: the Palomar submission (see below).
+  `FormalConjecturesCheck.lean` is its Solution module.
+- `scripts/check_axioms.sh`: fails unless every theorem listed in `scripts/axioms.txt` depends only on
   `propext`, `Classical.choice` and `Quot.sound`. This also catches any `sorry`.
 
 ## Kummer's congruence and Jensen's theorem
@@ -151,16 +153,31 @@ and 2 is invertible mod `p`, so `p⁴ ∣ C − 1 ⇔ p³ ∣ num(H_{p−1})`. I
 
 ## Building
 
-Requires [elan](https://github.com/leanprover/elan). The toolchain (`leanprover/lean4:v4.33.1`) and
-Mathlib (`0df444a3`, the commit Formal Conjectures uses) are pinned.
+Requires [elan](https://github.com/leanprover/elan). The toolchain (`leanprover/lean4:v4.36.0`) and
+Mathlib (`v4.36.0`) are pinned. Every `.lean` file uses Lean's module system, as Palomar requires.
+(The commit linked from the Formal Conjectures pull request, `05c68d7`, used Lean `v4.33.1` and
+Mathlib `0df444a3`, the versions Formal Conjectures pinned at the time.)
 
 ```sh
 lake exe cache get      # downloads compiled Mathlib
 lake build              # compiles this project
 bash scripts/check_axioms.sh
+./scripts/verify-comparator.sh   # Palomar's check: Challenge vs Solution (needs Linux and bwrap)
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same steps on every push from a clean clone.
+CI (`.github/workflows/ci.yml`) runs the same steps on every push from a clean clone, plus
+Palomar's source-requirements check and the `formalization.yaml` validator.
+
+## Palomar submission
+
+`Challenge.lean` is the statement surface: it imports only Mathlib and states, with `sorry`, the
+three Formal Conjectures statements (`wolstenholme_theorem`, `wolstenholme_harmonic`,
+`wolstenholme_bernoulli`, verbatim) and Glaisher's congruence (`glaisher`). `comparator.json`
+names these four theorems and the permitted axioms (`propext`, `Quot.sound`, `Classical.choice`).
+`lake comparator` checks that `FormalConjecturesCheck.lean` proves exactly these statements; in CI
+it prints `Your solution is okay!`. `formalization.yaml` records sources, authorship, the use of
+AI, scope and review status. Submissions go through the form at
+https://submit.palomar-registry.org/, with the full commit SHA.
 
 ## Authorship and use of AI
 

@@ -97,10 +97,11 @@ statement, `PROOF.md` now states that general form.
 | `wolstenholme_theorem` | `wolstenholme_theorem_mod_p_cube` | `p > 3`, prime (so `p ≥ 5`, since 4 is not prime) |
 | `wolstenholme_harmonic` | `wolstenholme_core` | `p > 7`, prime |
 | `wolstenholme_bernoulli` | `wolstenholme_bernoulli_core` and `bernoulli_eq_bernoulli'_of_ne_one` | `p > 7`, prime |
+| `glaisher` (Palomar `Challenge.lean`, not in FC) | `WolstenholmeHarmonic.glaisher` with `sum_Icc_one_div_sq` (`Σ_{k=1}^{n} 1/k² = H_{n,2}`) | `p` prime, `p ≥ 5` |
 | `erdos_291.variants.steinerberger_generalization` (`ErdosProblems/291.lean`) | proved directly | `p` prime, `p ≤ n` (as in FC) |
 | `infinitude_of_irregularprimes` (`RegularPrimes.lean`; definitions copied verbatim) | **not proved**: reduced to Kummer's criterion by `infinitude_of_irregularprimes_of_kummer` / `_of_iff` | the easy direction of Kummer's criterion, as a hypothesis |
 
-The CI checks that all nineteen theorems listed in `scripts/Axioms.lean` depend only on `propext`,
+The CI checks that every theorem listed in `scripts/axioms.txt` (twenty) depends only on `propext`,
 `Classical.choice` and `Quot.sound` (`scripts/check_axioms.sh`).
 
 ## Note
