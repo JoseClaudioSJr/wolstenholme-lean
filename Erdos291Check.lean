@@ -171,7 +171,7 @@ theorem erdos_291.variants.steinerberger_generalization (n p : ℕ) (hp : p.Prim
   have hcop : ∀ i ∈ Icc 1 k, Nat.Coprime ((1 : ℚ) / i).den p := by
     intro i hi
     have hi' := Finset.mem_Icc.1 hi
-    rw [one_div, Rat.inv_natCast_den, if_neg (by omega)]
+    rw [one_div, Rat.inv_natCast_den, ite_eq_right (by omega)]
     exact Nat.Coprime.symm ((Nat.Prime.coprime_iff_not_dvd hp).2 fun h => by
       have := Nat.le_of_dvd (by omega) h; omega)
   have hH : ratToZMod p (∑ i ∈ Icc 1 k, (1 : ℚ) / i) = ∑ m ∈ Icc 1 k, (m : ZMod p)⁻¹ := by
@@ -179,7 +179,7 @@ theorem erdos_291.variants.steinerberger_generalization (n p : ℕ) (hp : p.Prim
     refine Finset.sum_congr rfl fun i hi => ?_
     rw [one_div, ratToZMod_inv_natCast _ (by
       have := hcop i hi
-      rwa [one_div, Rat.inv_natCast_den, if_neg (by have := (Finset.mem_Icc.1 hi).1; omega)]
+      rwa [one_div, Rat.inv_natCast_den, ite_eq_right (by have := (Finset.mem_Icc.1 hi).1; omega)]
         at this)]
   have hden : ¬ p ∣ (∑ i ∈ Icc 1 k, (1 : ℚ) / i).den :=
     (Nat.Prime.coprime_iff_not_dvd hp).1 (coprime_den_sum _ _ hcop).symm

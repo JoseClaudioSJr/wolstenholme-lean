@@ -34,7 +34,7 @@ variable {p : ℕ} [Fact p.Prime]
 theorem coprime_den_one_div_prime (a : ℕ) {q : ℕ} (hq : q.Prime) (hqp : q ≠ p) :
     Nat.Coprime ((1 : ℚ) / q).den (p ^ a) := by
   have hp : p.Prime := Fact.out
-  rw [one_div, Rat.inv_natCast_den, if_neg hq.ne_zero]
+  rw [one_div, Rat.inv_natCast_den, ite_eq_right hq.ne_zero]
   exact Nat.Coprime.pow_right a ((Nat.coprime_primes hq hp).2 hqp)
 
 /-- von Staudt–Clausen, written as an identity. -/
@@ -130,7 +130,7 @@ theorem coprime_den_pow_div (a : ℕ) (hp5 : 5 ≤ p) {m : ℕ} (hm : 3 ≤ m) :
     field_simp
   rw [hpe]
   refine coprime_den_mul (coprime_den_natCast _) ?_
-  rw [one_div, Rat.inv_natCast_den, if_neg hm'0]
+  rw [one_div, Rat.inv_natCast_den, ite_eq_right hm'0]
   exact Nat.Coprime.pow_right a ((Nat.coprime_comm).1 ((Nat.Prime.coprime_iff_not_dvd hp).2 hm'))
 
 /-- **Faulhaber mod `p²`.** `∑_{k=1}^{p-1} kⁿ ≡ p·B_n (mod p²)` for even `n ≥ 2` with

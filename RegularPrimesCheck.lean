@@ -38,7 +38,10 @@ theorem infinitude_of_irregularprimes_of_kummer
       (∃ k ∈ Finset.Icc 2 (p - 3), Even k ∧ (p : ℤ) ∣ (bernoulli' k).num) →
         ¬ IsRegularPrime p) :
     irregularPrimes.Infinite :=
-  WolstenholmeHarmonic.jensen_bernoulli.mono fun p hp => ⟨hp.1, @hK p ⟨hp.1⟩ hp.2⟩
+  WolstenholmeHarmonic.jensen_bernoulli.mono fun p hp => by
+    rw [Set.mem_setOf_eq] at hp
+    rw [irregularPrimes, Set.mem_setOf_eq]
+    exact ⟨hp.1, @hK p ⟨hp.1⟩ hp.2⟩
 
 /-- FC's `infinitude_of_irregularprimes` follows from FC's `isRegularPrime_iff_Bernoulli`
 (Kummer's criterion). -/
