@@ -1,4 +1,6 @@
 import FormalConjecturesCheck
+import RegularPrimesCheck
+import Erdos291Check
 
 #print axioms WolstenholmePrime.wolstenholme_theorem
 #print axioms WolstenholmePrime.wolstenholme_harmonic
@@ -10,3 +12,12 @@ import FormalConjecturesCheck
 #print axioms WolstenholmeHarmonic.harmonic_iff_harmonic2
 #print axioms WolstenholmeHarmonic.glaisher
 #print axioms WolstenholmeHarmonic.voronoiF_mod_p
+#print axioms WolstenholmeHarmonic.sum_pow_eq_p_mul_bernoulli
+#print axioms WolstenholmeHarmonic.voronoi_mod_p
+#print axioms WolstenholmeHarmonic.kummer_dvd
+#print axioms WolstenholmeHarmonic.dvd_den_bernoulli
+#print axioms WolstenholmeHarmonic.one_lt_abs_bernoulli
+#print axioms WolstenholmeHarmonic.jensen_bernoulli
+#print axioms RegularPrimes.infinitude_of_irregularprimes_of_kummer
+#print axioms RegularPrimes.infinitude_of_irregularprimes_of_iff
+#print axioms Erdos291.erdos_291.variants.steinerberger_generalization
