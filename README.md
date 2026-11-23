@@ -38,6 +38,8 @@ which Mathlib does not have.
 
 ## Files
 
+- `PROOF.md`: the complete proof in ordinary mathematical notation, with no Lean, step by step
+  and with the Lean name of each step.
 - `WolstenholmeHarmonic.lean`: the proofs, about 1,100 lines. They are organised in reusable layers:
   generic symmetric-function identities, reduction of rationals into `ZMod m`, then the
   number theory.

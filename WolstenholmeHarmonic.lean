@@ -3,34 +3,48 @@ import Mathlib
 /-!
 # Wolstenholme primes via harmonic numbers and Bernoulli numbers
 
-Target, copied from Formal Conjectures
-(`FormalConjectures/Wikipedia/WolstenholmePrime.lean`):
+Proofs of the two textbook characterisations stated in Formal Conjectures
+(`FormalConjectures/Wikipedia/WolstenholmePrime.lean`). A prime `p > 7` is a
+*Wolstenholme prime* if `C(2p−1, p−1) ≡ 1 (mod p⁴)`.
 
-    theorem wolstenholme_harmonic (p : ℕ) :
-        IsWolstenholmePrime p ↔ (p > 7) ∧ Nat.Prime p ∧ ↑(p ^ 3) ∣ (harmonic (p - 1)).num
+* `wolstenholme_harmonic`  : Wolstenholme  ⇔  `p³ ∣ num(H_{p−1})`,  `H_{p−1} = Σ_{k<p} 1/k`.
+* `wolstenholme_bernoulli` : Wolstenholme  ⇔  `p ∣ num(B_{p−3})`.
 
-Part I route (no Bernoulli numbers), for every prime `p ≥ 5`:
+A human-readable proof, with no Lean, is in `PROOF.md`.
 
-    C(2p-1, p-1) - 1 ≡ 2p · H_{p-1}   (mod p⁴)
+## Notation
 
-1. `choose_cast_eq_prod`         C(2p-1,p-1) = ∏_{k=1}^{p-1} (1 + p/k)          in ZMod p⁴
-2. `binomial_product_expansion`  ∏ (1 + p/k) = 1 + p·S₁ + p²·e₂ + p³·e₃           in ZMod p⁴
-3. `harmonic_sum_pow_mod`        S_j ≡ 0 (mod p) when (p-1) ∤ j  (FiniteField.sum_pow_units)
-4. `two_mul_E_two`, `six_mul_E_three`  Newton identities (pure algebra)
-5. `harmonic_pairing`            p·(2S₁ + p·S₂) = 0                              in ZMod p⁴
-6. `binomial_harmonic_congruence` the main congruence
-7. `wolstenholme_harmonic`        the Formal Conjectures statement
+* `invK m i = 1/(i+1)` in `ZMod m`. Indices run over `i ∈ range (p−1)`,
+  i.e. `k = i + 1 = 1, …, p−1`.
+* `S m p j = Σ_k k^{−j}` in `ZMod m` (power sums of inverses); `S₁` is `H_{p−1}` reduced mod `m`,
+  and `S₂` is `H_{p−1,2} = Σ 1/k²` reduced mod `m`.
+* `E m p j` = j-th elementary symmetric function of the `1/k`, in `ZMod m`.
+* `ratToZMod m q = num(q) · den(q)⁻¹` in `ZMod m`, the reduction of a rational whose
+  denominator is a unit mod `m`. It turns statements about the rationals `H_{p−1}`
+  and `B_{p−3}` into statements in `ZMod pⁿ`.
 
-Part II (`wolstenholme_bernoulli`) is described at the start of its own section below.
+## Layout
 
-The ℚ ↔ ZMod (p^n) bridge lives in its own section (B1–B8) so it can be reused.
+1. **Layer 1 (any commutative semiring).** Newton-type identities: `(Σa)² = Σa² + 2e₂`,
+   `(Σa)³ + 2Σa³ = 3(Σa)(Σa²) + 6e₃`, and `∏(1 + c·aᵢ) = 1 + c·e₁ + c²·e₂ + c³·e₃` when `c⁴ = 0`.
+2. **Layer 2 (any `m`).** `ratToZMod` is additive and multiplicative, commutes with sums and with
+   reduction `ZMod n → ZMod m`, and detects divisibility of numerators.
+3. **Bridge (`ZMod pⁿ`).** Units, reduction of power sums, "`p·x = 0` iff `x ≡ 0` one level down",
+   and `C(2p−1, p−1) = ∏ (1 + p/k)`.
+4. **Part I.** For every prime `p ≥ 5`, `C(2p−1, p−1) − 1 ≡ 2p·H_{p−1} (mod p⁴)`:
+   * `harmonic_sum_pow_mod`: `S_j ≡ 0 (mod p)` when `p − 1 ∤ j` (`FiniteField.sum_pow_units`);
+   * `binomial_product_expansion`: `C = 1 + pS₁ + p²e₂ + p³e₃` in `ZMod p⁴`;
+   * `harmonic_pairing`: `p(2S₁ + pS₂) = 0` (pairing `k ↔ p − k`);
+   * `binomial_harmonic_congruence`, then `wolstenholme_core` and `wolstenholme_harmonic`.
+5. **Part II** (no Kummer congruence, which Mathlib lacks):
+   * Step A `sum_pow_p_sub_three`: `Σ k^{p−3} ≡ p·B_{p−3} (mod p²)` (Faulhaber, von Staudt–Clausen);
+   * Step B `three_S_two_eq`: `3·H_{p−1,2} ≡ 2·Σ k^{p−3} (mod p²)` (doubling `k ↦ 2k mod p`);
+   * `wolstenholme_bernoulli_core`, then `wolstenholme_bernoulli`.
 
-Toolchain: Lean v4.33.1, Mathlib 0df444a3 (same as Formal Conjectures and the RH proof).
-Status: complete, no `sorry`. Both `wolstenholme_harmonic` and `wolstenholme_bernoulli`
-depend only on [propext, Classical.choice, Quot.sound]. Developed against Mathlib 0df444a3
-(Lean v4.33.1); CI rebuilds with `import Mathlib` from a clean clone and re-checks the axioms.
-`IsWolstenholmePrime` here is a verbatim copy of the Formal Conjectures definition;
-`FormalConjecturesCheck.lean` applies both theorems to the original statements.
+Toolchain: Lean v4.33.1, Mathlib 0df444a3 (as in Formal Conjectures). No `sorry`; both final
+theorems depend only on [propext, Classical.choice, Quot.sound]. `IsWolstenholmePrime` here is a
+verbatim copy of the Formal Conjectures definition; `FormalConjecturesCheck.lean` applies both
+theorems to the original statements.
 -/
 
 open Finset
@@ -67,26 +81,32 @@ theorem sum_sq_eq_sum_sq_add_two_mul_E2
     (∑ i ∈ s, a i) ^ 2 =
       (∑ i ∈ s, a i ^ 2) + 2 * ∑ t ∈ s.powersetCard 2, ∏ i ∈ t, a i := by
   classical
+  -- Induction on `s`. Adding a new element `x`, the 2-subsets of `insert x s` are the 2-subsets
+  -- of `s` plus the sets `{x, i}` with `i ∈ s`; the latter contribute the cross term `a x · Σ a`.
   induction s using Finset.induction_on with
   | empty => rw [Finset.powersetCard_eq_empty.2 (by simp)]; simp
   | insert x s hx ih =>
+    -- The two families of subsets are disjoint (only the second contains `x`) …
     have hdisj : Disjoint (s.powersetCard 2) ((s.powersetCard 1).image (insert x)) := by
       rw [Finset.disjoint_left]
       intro t ht ht'
       obtain ⟨u, -, rfl⟩ := Finset.mem_image.1 ht'
       exact hx ((Finset.mem_powersetCard.1 ht).1 (Finset.mem_insert_self x u))
+    -- … and `t ↦ insert x t` is injective on subsets of `s` (undo it with `erase x`).
     have hinj : Set.InjOn (insert x) ((s.powersetCard 1 : Finset (Finset α)) : Set (Finset α)) := by
       intro u hu v hv huv
       have hxu : x ∉ u := fun h => hx ((Finset.mem_powersetCard.1 hu).1 h)
       have hxv : x ∉ v := fun h => hx ((Finset.mem_powersetCard.1 hv).1 h)
       rw [← Finset.erase_insert hxu, ← Finset.erase_insert hxv]
       exact congrArg (fun w => Finset.erase w x) huv
+    -- The new pairs `{x, i}` sum to `a x · Σ_{i∈s} a i`.
     have hcross : ∑ t ∈ s.powersetCard 1, ∏ i ∈ insert x t, a i = a x * ∑ i ∈ s, a i := by
       rw [Finset.powersetCard_one, Finset.sum_map, Finset.mul_sum]
       refine Finset.sum_congr rfl fun i hi => ?_
       have hxi : x ∉ ({i} : Finset α) := by
         rw [Finset.mem_singleton]; rintro rfl; exact hx hi
       simp [Finset.prod_insert hxi]
+    -- Expand `(a x + Σ a)²` and use the induction hypothesis for `(Σ a)²`.
     rw [Finset.powersetCard_succ_insert hx 1, Finset.sum_union hdisj, Finset.sum_image hinj,
       hcross, Finset.sum_insert hx, Finset.sum_insert hx, add_sq, ih]
     ring
@@ -101,6 +121,8 @@ theorem sum_cube_add_two_sum_cube_eq
   induction s using Finset.induction_on with
   | empty => rw [Finset.powersetCard_eq_empty.2 (by simp)]; simp
   | insert x s hx ih =>
+    -- Same induction as for the square. New 3-subsets are `{x} ∪ t` with `t` a 2-subset of `s`,
+    -- contributing `a x · e₂(s)`; the degree-2 identity `(Σa)² = Σa² + 2e₂` closes the cross term.
     have h2 := sum_sq_eq_sum_sq_add_two_mul_E2 s a
     have hdisj : Disjoint (s.powersetCard 3) ((s.powersetCard 2).image (insert x)) := by
       rw [Finset.disjoint_left]
@@ -126,6 +148,8 @@ theorem sum_cube_add_two_sum_cube_eq
     set C := ∑ i ∈ s, a i ^ 3
     set e2 := ∑ t ∈ s.powersetCard 2, ∏ i ∈ t, a i
     set e3 := ∑ t ∈ s.powersetCard 3, ∏ i ∈ t, a i
+    -- With A = Σa, B = Σa², C = Σa³ over `s`: expand, then substitute `A² = B + 2e₂` and the
+    -- induction hypothesis `A³ + 2C = 3AB + 6e₃`.
     calc (a x + A) ^ 3 + 2 * (a x ^ 3 + C)
         = 3 * a x ^ 3 + 3 * a x ^ 2 * A + 3 * a x * A ^ 2 + (A ^ 3 + 2 * C) := by ring
       _ = 3 * a x ^ 3 + 3 * a x ^ 2 * A + 3 * a x * (B + 2 * e2) + (3 * A * B + 6 * e3) := by
@@ -173,6 +197,7 @@ theorem prod_one_add_mul_of_pow_four_eq_zero {α R : Type*} [CommRing R]
       esum_succ_insert hx a 2, Finset.powersetCard_zero, Finset.sum_singleton, Finset.prod_empty]
     linear_combination (a x * ∑ t ∈ s.powersetCard 3, ∏ i ∈ t, a i) * hc
 
+/-- `e₁(a) = ∑ aᵢ`: summing over one-element subsets is the plain sum. -/
 theorem sum_powersetCard_one {α R : Type*} [CommSemiring R] (s : Finset α) (a : α → R) :
     ∑ t ∈ s.powersetCard 1, ∏ i ∈ t, a i = ∑ i ∈ s, a i := by
   rw [Finset.powersetCard_one, Finset.sum_map]
@@ -225,6 +250,8 @@ theorem ratToZMod_mul_of_eq (q : ℚ) (hq : Nat.Coprime q.den m) (d : ℕ) (a : 
     _ = a * q.den := this
     _ = q.den * a := by ring
 
+/-- `ratToZMod` is additive on rationals whose denominators (and that of the sum) are units
+mod `m`. -/
 theorem ratToZMod_add (a b : ℚ) (ha : Nat.Coprime a.den m) (hb : Nat.Coprime b.den m)
     (hab : Nat.Coprime (a + b).den m) :
     ratToZMod m (a + b) = ratToZMod m a + ratToZMod m b := by
@@ -242,6 +269,7 @@ theorem ratToZMod_add (a b : ℚ) (ha : Nat.Coprime a.den m) (hb : Nat.Coprime b
   push_cast at h1 ⊢
   linear_combination h1 - (b.den : ZMod m) * ha' - (a.den : ZMod m) * hb'
 
+/-- `1/k` reduces to the inverse of `k` in `ZMod m` when `k` is prime to `m`. -/
 theorem ratToZMod_inv_natCast (k : ℕ) (hk : Nat.Coprime k m) :
     ratToZMod m ((k : ℚ)⁻¹) = (k : ZMod m)⁻¹ := by
   have hk0 : k ≠ 0 ∨ m = 1 := by
@@ -269,6 +297,8 @@ theorem castHom_invK {m n : ℕ} (h : m ∣ n) (i : ℕ) (hc : Nat.Coprime (i + 
   rw [map_mul, map_natCast, map_one] at h2
   exact (ZMod.inv_eq_of_mul_eq_one m _ _ h2).symm
 
+/-- Reduction `ZMod n → ZMod m` sends the power sum `S_j` to `S_j`, provided every
+`k = 1, …, p−1` is a unit mod `n`. -/
 theorem castHom_S_gen {m n : ℕ} (h : m ∣ n) (p j : ℕ)
     (hc : ∀ i ∈ range (p - 1), Nat.Coprime (i + 1) n) :
     ZMod.castHom h (ZMod m) (S n p j) = S m p j := by
@@ -276,6 +306,88 @@ theorem castHom_S_gen {m n : ℕ} (h : m ∣ n) (p j : ℕ)
   rw [map_sum]
   refine Finset.sum_congr rfl fun i hi => ?_
   rw [map_pow, castHom_invK h i (hc i hi)]
+
+
+/-- Rationals whose denominator is prime to `m` are closed under addition. -/
+theorem coprime_den_add {a b : ℚ} (ha : Nat.Coprime a.den m) (hb : Nat.Coprime b.den m) :
+    Nat.Coprime (a + b).den m :=
+  Nat.Coprime.coprime_dvd_left (Rat.add_den_dvd a b) (Nat.Coprime.mul_left ha hb)
+
+/-- Rationals whose denominator is prime to `m` are closed under multiplication. -/
+theorem coprime_den_mul {a b : ℚ} (ha : Nat.Coprime a.den m) (hb : Nat.Coprime b.den m) :
+    Nat.Coprime (a * b).den m :=
+  Nat.Coprime.coprime_dvd_left (Rat.mul_den_dvd a b) (Nat.Coprime.mul_left ha hb)
+
+/-- An integer has denominator `1`, hence prime to every `m`. -/
+theorem coprime_den_intCast (z : ℤ) : Nat.Coprime (z : ℚ).den m := by simp
+
+/-- A natural number has denominator `1`, hence prime to every `m`. -/
+theorem coprime_den_natCast (n : ℕ) : Nat.Coprime (n : ℚ).den m := by simp
+
+/-- Rationals whose denominator is prime to `m` are closed under finite sums. -/
+theorem coprime_den_sum {ι : Type*} (s : Finset ι) (f : ι → ℚ)
+    (h : ∀ i ∈ s, Nat.Coprime (f i).den m) : Nat.Coprime (∑ i ∈ s, f i).den m := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simp
+  | insert x s hx ih =>
+    rw [Finset.sum_insert hx]
+    exact coprime_den_add (h x (mem_insert_self _ _)) (ih fun i hi => h i (mem_insert_of_mem hi))
+
+/-- Additivity of `ratToZMod`; the condition on the denominator of the sum is derived. -/
+theorem ratToZMod_add' (a b : ℚ) (ha : Nat.Coprime a.den m) (hb : Nat.Coprime b.den m) :
+    ratToZMod m (a + b) = ratToZMod m a + ratToZMod m b :=
+  ratToZMod_add a b ha hb (coprime_den_add ha hb)
+
+/-- `ratToZMod` is multiplicative on rationals whose denominators are units mod `m`. -/
+theorem ratToZMod_mul (a b : ℚ) (ha : Nat.Coprime a.den m) (hb : Nat.Coprime b.den m) :
+    ratToZMod m (a * b) = ratToZMod m a * ratToZMod m b := by
+  have hu : IsUnit (((a.den * b.den : ℕ) : ZMod m)) :=
+    (ZMod.unitOfCoprime _ (Nat.Coprime.mul_left ha hb)).isUnit
+  apply hu.mul_left_cancel
+  have h : (a * b) * ((a.den * b.den : ℕ) : ℚ) = a.num * b.num := by
+    push_cast
+    rw [← Rat.mul_den_eq_num a, ← Rat.mul_den_eq_num b]
+    ring
+  have h1 := ratToZMod_mul_of_eq (a * b) (coprime_den_mul ha hb) (a.den * b.den) (a.num * b.num)
+    (by exact_mod_cast h)
+  have ha' := ratToZMod_mul_den a ha
+  have hb' := ratToZMod_mul_den b hb
+  push_cast at h1 ⊢
+  linear_combination h1 - (ratToZMod m b * (b.den : ZMod m)) * ha' - (a.num : ZMod m) * hb'
+
+/-- `ratToZMod` sends an integer to its residue class. -/
+theorem ratToZMod_intCast (z : ℤ) : ratToZMod m (z : ℚ) = z := by
+  have := ratToZMod_mul_of_eq (m := m) (z : ℚ) (coprime_den_intCast z) 1 z (by simp)
+  simpa using this
+
+/-- `ratToZMod` sends a natural number to its residue class. -/
+theorem ratToZMod_natCast (n : ℕ) : ratToZMod m (n : ℚ) = n := by
+  have := ratToZMod_intCast (m := m) (n : ℤ)
+  simpa using this
+
+/-- `ratToZMod` commutes with finite sums of rationals whose denominators are units mod `m`. -/
+theorem ratToZMod_sum {ι : Type*} (s : Finset ι) (f : ι → ℚ)
+    (h : ∀ i ∈ s, Nat.Coprime (f i).den m) :
+    ratToZMod m (∑ i ∈ s, f i) = ∑ i ∈ s, ratToZMod m (f i) := by
+  classical
+  induction s using Finset.induction_on with
+  | empty => simpa using ratToZMod_natCast (m := m) 0
+  | insert x s hx ih =>
+    have hs : ∀ i ∈ s, Nat.Coprime (f i).den m := fun i hi => h i (mem_insert_of_mem hi)
+    rw [Finset.sum_insert hx, Finset.sum_insert hx,
+      ratToZMod_add' _ _ (h x (mem_insert_self _ _)) (coprime_den_sum s f hs), ih hs]
+
+/-- Reduction `ZMod n → ZMod m` is compatible with `ratToZMod`. -/
+theorem castHom_ratToZMod {m n : ℕ} (h : m ∣ n) (q : ℚ) (hq : Nat.Coprime q.den n) :
+    ZMod.castHom h (ZMod m) (ratToZMod n q) = ratToZMod m q := by
+  unfold ratToZMod
+  rw [map_mul, map_intCast]
+  congr 1
+  have h1 : ((q.den : ZMod n)) * (q.den : ZMod n)⁻¹ = 1 := ZMod.coe_mul_inv_eq_one _ hq
+  have h2 := congrArg (ZMod.castHom h (ZMod m)) h1
+  rw [map_mul, map_natCast, map_one] at h2
+  exact (ZMod.inv_eq_of_mul_eq_one m _ _ h2).symm
 
 end RatBridge
 
@@ -285,6 +397,7 @@ section Bridge
 
 variable {p : ℕ} [Fact p.Prime]
 
+/-- Every `k = i + 1 ≤ p − 1` is prime to `pᵃ`. -/
 theorem coprime_succ_pow {a : ℕ} : ∀ i ∈ range (p - 1), Nat.Coprime (i + 1) (p ^ a) := by
   intro i hi
   have hp : p.Prime := Fact.out
@@ -403,6 +516,8 @@ theorem choose_cast_eq_prod (n : ℕ) :
     exact Nat.Coprime.prod_left hcop
   have hu : IsUnit (((p - 1).factorial : ℕ) : ZMod (p ^ n)) :=
     (ZMod.unitOfCoprime _ hfact).isUnit
+  -- (p−1)!·C(2p−1, p−1) = (p+1)(p+2)⋯(2p−1) = ∏ (k + p), and (k + p) = k·(1 + p/k).
+  -- Cancel the unit (p−1)! = ∏ k on both sides.
   apply hu.mul_left_cancel
   have h1 : (p - 1).factorial * (2 * p - 1).choose (p - 1) = ∏ i ∈ range (p - 1), (p + 1 + i) := by
     rw [← Nat.ascFactorial_eq_prod_range, Nat.ascFactorial_eq_factorial_mul_choose,
@@ -416,6 +531,7 @@ theorem choose_cast_eq_prod (n : ℕ) :
   linear_combination (-(p : ZMod (p ^ n))) * hinv
 
 omit [Fact p.Prime] in
+/-- `p⁴ = 0` in `ZMod p⁴`. -/
 theorem natCast_pow_four : (p : ZMod (p ^ 4)) ^ 4 = 0 := by
   rw [← Nat.cast_pow, ZMod.natCast_self]
 
@@ -478,10 +594,12 @@ theorem harmonic_sum_pow_mod {j : ℕ} (hj : ¬ (p - 1) ∣ j) : S p p j = 0 := 
       rw [Nat.sub_add_cancel (Nat.pos_of_ne_zero h0), ZMod.natCast_zmod_val]
     · intro i hi
       simp [Units.val_inv_eq_inv_val]
+  -- `u ↦ u⁻¹` permutes the units, so the sum of `(u⁻¹)^j` equals the sum of `u^j` …
   have h2 : ∑ u : (ZMod p)ˣ, ((u⁻¹ : (ZMod p)ˣ) : ZMod p) ^ j
       = ∑ u : (ZMod p)ˣ, (u : ZMod p) ^ j :=
     Fintype.sum_equiv (Equiv.inv _) _ _ (fun _ => rfl)
   rw [h1, h2]
+  -- … which is `0` by `FiniteField.sum_pow_units`, since `(p − 1) ∤ j`.
   have := FiniteField.sum_pow_units (K := ZMod p) j
   simpa [ZMod.card, hj] using this
 
@@ -502,6 +620,7 @@ theorem S_one_eq_p_mul (hp5 : 5 ≤ p) :
   rw [castHom_S_one (by norm_num) 1]
   exact harmonic_sum_pow_mod (fun h => by have := Nat.le_of_dvd one_pos h; omega)
 
+/-- `S₃ ≡ 0 (mod p)`, written as `S₃ = p·y` in `ZMod p⁴` (uses `p ≥ 5`, so `p − 1 ∤ 3`). -/
 theorem S_three_eq_p_mul (hp5 : 5 ≤ p) :
     ∃ y : ZMod (p ^ 4), S (p ^ 4) p 3 = (p : ZMod (p ^ 4)) * y := by
   refine exists_eq_p_mul (by norm_num) _ ?_
@@ -517,7 +636,11 @@ theorem harmonic_pairing (hp5 : 5 ≤ p) :
   obtain ⟨y3, h3⟩ := S_three_eq_p_mul hp5
   set P : ZMod (p ^ 4) := (p : ZMod (p ^ 4)) with hP
   have hP4 : P ^ 4 = 0 := by rw [hP]; exact natCast_pow_four
-  -- x i = 1/(i+1),  y i = 1/(p-1-i)
+  -- Write x = 1/k and y = 1/(p−k) for k = i + 1. Plan:
+  --   (1) Σ y = Σ x = S₁ (reflection k ↦ p − k);
+  --   (2) x + y = p·x·y, since k + (p − k) = p;
+  --   (3) hence p(x+y) + p²x² = −p³x³ + p⁴(x³y), a polynomial identity given (2);
+  --   (4) summing: p(2S₁ + pS₂) = −p³S₃ + 0, and S₃ = p·y₃ makes this −p⁴y₃ = 0.
   have hrefl : ∑ i ∈ range (p - 1), invK (p ^ 4) (p - 1 - 1 - i) = S (p ^ 4) p 1 := by
     simp only [S, pow_one]
     exact Finset.sum_range_reflect (invK (p ^ 4)) (p - 1)
@@ -535,6 +658,7 @@ theorem harmonic_pairing (hp5 : 5 ≤ p) :
       rw [hP, show p - 1 - 1 - i + 1 = p - (i + 1) by omega, Nat.cast_sub (by omega)]
     rw [h4] at h2
     linear_combination (-(invK (p ^ 4) i)) * h2 - (invK (p ^ 4) (p - 1 - 1 - i)) * h1
+  -- step (3), termwise
   have key : ∀ i ∈ range (p - 1),
       P * (invK (p ^ 4) i + invK (p ^ 4) (p - 1 - 1 - i)) + P ^ 2 * invK (p ^ 4) i ^ 2
         = -(P ^ 3 * invK (p ^ 4) i ^ 3)
@@ -584,6 +708,9 @@ theorem p_cube_mul_E_three (hp5 : 5 ≤ p) :
 theorem binomial_harmonic_congruence (hp5 : 5 ≤ p) :
     (((2 * p - 1).choose (p - 1) : ℕ) : ZMod (p ^ 4)) - 1 =
       2 * (p : ZMod (p ^ 4)) * S (p ^ 4) p 1 := by
+  -- C − 1 = p·S₁ + p²·e₂ + p³·e₃ (product expansion). Multiply by 2 and use
+  -- 2e₂ = S₁² − S₂ (Newton), p²S₁² = 0, p³e₃ = 0 and p²S₂ = −2p·S₁ (pairing):
+  -- 2(C − 1) = 2pS₁ + p²S₁² − p²S₂ + 2p³e₃ = 2pS₁ + 2pS₁ = 2·(2pS₁).
   rw [choose_cast_eq_prod, binomial_product_expansion]
   apply (two_isUnit hp5).mul_left_cancel
   have newton2 := two_mul_E_two (p ^ 4) p
@@ -595,6 +722,11 @@ theorem binomial_harmonic_congruence (hp5 : 5 ≤ p) :
 /-- (5) The core equivalence, for primes `p ≥ 5`. -/
 theorem wolstenholme_core (hp5 : 5 ≤ p) :
     (2 * p - 1).choose (p - 1) ≡ 1 [MOD p ^ 4] ↔ ((p ^ 3 : ℕ) : ℤ) ∣ (harmonic (p - 1)).num := by
+  -- C ≡ 1 (mod p⁴)  ⇔  2p·S₁ = 0 in ZMod p⁴        (main congruence)
+  --                 ⇔  p·S₁ = 0                     (2 is a unit)
+  --                 ⇔  S₁ = 0 in ZMod p³            (multiplying by p)
+  --                 ⇔  H_{p−1} ≡ 0 in ZMod p³       (S₁ is the reduction of H_{p−1})
+  --                 ⇔  p³ ∣ num H_{p−1}             (its denominator is prime to p)
   rw [← ZMod.natCast_eq_natCast_iff, Nat.cast_one, ← sub_eq_zero,
     binomial_harmonic_congruence hp5, mul_assoc, (two_isUnit hp5).mul_right_eq_zero,
     natCast_mul_eq_zero_iff, castHom_S (by norm_num : 3 ≤ 4) 1, ← ratToZMod_harmonic 3,
@@ -604,6 +736,8 @@ end Math
 
 /-! ## The Formal Conjectures statement -/
 
+/-- **Part I, final statement** (Formal Conjectures `wolstenholme_harmonic`): `p` is a Wolstenholme
+prime iff `p > 7`, `p` is prime and `p³` divides the numerator of `H_{p−1}`. -/
 theorem wolstenholme_harmonic (p : ℕ) :
     IsWolstenholmePrime p ↔ (p > 7) ∧ Nat.Prime p ∧ ↑(p ^ 3) ∣ (harmonic (p - 1)).num := by
   unfold IsWolstenholmePrime
@@ -624,71 +758,6 @@ Route (no Kummer congruence, which Mathlib lacks):
 * With the pairing lemma: `p⁴ ∣ C(2p-1,p-1) - 1 ⇔ p³ ∣ H ⇔ p² ∣ H₂ ⇔ p ∣ B_{p-3}`.
 -/
 
-section RatBridge2
-variable {m : ℕ}
-
-theorem coprime_den_add {a b : ℚ} (ha : Nat.Coprime a.den m) (hb : Nat.Coprime b.den m) :
-    Nat.Coprime (a + b).den m :=
-  Nat.Coprime.coprime_dvd_left (Rat.add_den_dvd a b) (Nat.Coprime.mul_left ha hb)
-
-theorem coprime_den_mul {a b : ℚ} (ha : Nat.Coprime a.den m) (hb : Nat.Coprime b.den m) :
-    Nat.Coprime (a * b).den m :=
-  Nat.Coprime.coprime_dvd_left (Rat.mul_den_dvd a b) (Nat.Coprime.mul_left ha hb)
-
-theorem coprime_den_intCast (z : ℤ) : Nat.Coprime (z : ℚ).den m := by simp
-
-theorem coprime_den_natCast (n : ℕ) : Nat.Coprime (n : ℚ).den m := by simp
-
-theorem coprime_den_sum {ι : Type*} (s : Finset ι) (f : ι → ℚ)
-    (h : ∀ i ∈ s, Nat.Coprime (f i).den m) : Nat.Coprime (∑ i ∈ s, f i).den m := by
-  classical
-  induction s using Finset.induction_on with
-  | empty => simp
-  | insert x s hx ih =>
-    rw [Finset.sum_insert hx]
-    exact coprime_den_add (h x (mem_insert_self _ _)) (ih fun i hi => h i (mem_insert_of_mem hi))
-
-theorem ratToZMod_add' (a b : ℚ) (ha : Nat.Coprime a.den m) (hb : Nat.Coprime b.den m) :
-    ratToZMod m (a + b) = ratToZMod m a + ratToZMod m b :=
-  ratToZMod_add a b ha hb (coprime_den_add ha hb)
-
-theorem ratToZMod_mul (a b : ℚ) (ha : Nat.Coprime a.den m) (hb : Nat.Coprime b.den m) :
-    ratToZMod m (a * b) = ratToZMod m a * ratToZMod m b := by
-  have hu : IsUnit (((a.den * b.den : ℕ) : ZMod m)) :=
-    (ZMod.unitOfCoprime _ (Nat.Coprime.mul_left ha hb)).isUnit
-  apply hu.mul_left_cancel
-  have h : (a * b) * ((a.den * b.den : ℕ) : ℚ) = a.num * b.num := by
-    push_cast
-    rw [← Rat.mul_den_eq_num a, ← Rat.mul_den_eq_num b]
-    ring
-  have h1 := ratToZMod_mul_of_eq (a * b) (coprime_den_mul ha hb) (a.den * b.den) (a.num * b.num)
-    (by exact_mod_cast h)
-  have ha' := ratToZMod_mul_den a ha
-  have hb' := ratToZMod_mul_den b hb
-  push_cast at h1 ⊢
-  linear_combination h1 - (ratToZMod m b * (b.den : ZMod m)) * ha' - (a.num : ZMod m) * hb'
-
-theorem ratToZMod_intCast (z : ℤ) : ratToZMod m (z : ℚ) = z := by
-  have := ratToZMod_mul_of_eq (m := m) (z : ℚ) (coprime_den_intCast z) 1 z (by simp)
-  simpa using this
-
-theorem ratToZMod_natCast (n : ℕ) : ratToZMod m (n : ℚ) = n := by
-  have := ratToZMod_intCast (m := m) (n : ℤ)
-  simpa using this
-
-theorem ratToZMod_sum {ι : Type*} (s : Finset ι) (f : ι → ℚ)
-    (h : ∀ i ∈ s, Nat.Coprime (f i).den m) :
-    ratToZMod m (∑ i ∈ s, f i) = ∑ i ∈ s, ratToZMod m (f i) := by
-  classical
-  induction s using Finset.induction_on with
-  | empty => simpa using ratToZMod_natCast (m := m) 0
-  | insert x s hx ih =>
-    have hs : ∀ i ∈ s, Nat.Coprime (f i).den m := fun i hi => h i (mem_insert_of_mem hi)
-    rw [Finset.sum_insert hx, Finset.sum_insert hx,
-      ratToZMod_add' _ _ (h x (mem_insert_self _ _)) (coprime_den_sum s f hs), ih hs]
-
-end RatBridge2
-
 section BernoulliPart
 
 variable {p : ℕ} [Fact p.Prime]
@@ -703,6 +772,8 @@ theorem sum_range_succ_eq_sum_units {M : Type*} [AddCommMonoid M] (g : ℕ → M
     have := Nat.le_of_dvd (Nat.succ_pos i) h
     have := mem_range.1 hi
     omega
+  -- Bijection `i ↦ unit (i+1)`, with inverse `u ↦ val u − 1`. The four goals: the inverse lands in
+  -- `range (p−1)`, the two maps are mutually inverse, and the summands agree.
   refine Finset.sum_bij' (fun i hi => Units.mk0 _ (hne i hi))
     (fun u _ => (u : ZMod p).val - 1) (fun _ _ => mem_univ _) ?_ ?_ ?_ ?_
   · intro u _
@@ -741,15 +812,19 @@ theorem sum_range_double (hp3 : 3 ≤ p) {M : Type*} [AddCommMonoid M] (g : ℕ 
   simp only [Equiv.coe_mulLeft, Units.val_mul, Units.val_mk0, ZMod.val_mul, h2p]
 
 omit [Fact p.Prime] in
+/-- `p² = 0` in `ZMod p²`. -/
 theorem natCast_sq_self : (p : ZMod (p ^ 2)) ^ 2 = 0 := by
   rw [← Nat.cast_pow, ZMod.natCast_self]
 
+/-- If `z ≡ 0 (mod p)`, then `p·z = 0` in `ZMod p²`. This is how facts that only hold mod `p`
+(Fermat's little theorem) are used under a factor `p`. -/
 theorem mul_eq_zero_of_castHom_two (z : ZMod (p ^ 2))
     (hz : ZMod.castHom (dvd_pow_self p two_ne_zero) (ZMod p) z = 0) :
     (p : ZMod (p ^ 2)) * z = 0 := by
   obtain ⟨y, rfl⟩ := exists_eq_p_mul two_ne_zero z hz
   rw [← mul_assoc, ← sq, natCast_sq_self, zero_mul]
 
+/-- Any `0 < r < p` is prime to `pᵃ`. -/
 theorem coprime_of_pos_lt {r : ℕ} (a : ℕ) (h0 : 0 < r) (hr : r < p) : Nat.Coprime r (p ^ a) := by
   have hp : p.Prime := Fact.out
   refine Nat.Coprime.pow_right a ((Nat.coprime_comm).1 ((Nat.Prime.coprime_iff_not_dvd hp).2 ?_))
@@ -795,6 +870,7 @@ theorem pow_double (n k f r : ℕ) (hrk : (r : ZMod (p ^ 2)) = 2 * k - p * f) :
   rw [hrk, sub_eq_add_neg, add_pow_of_sq_eq_zero _ _ hε]
   ring
 
+/-- `3` is a unit in `ZMod p²` for `p ≥ 5`. -/
 theorem three_isUnit_sq (hp5 : 5 ≤ p) : IsUnit (3 : ZMod (p ^ 2)) := by
   have hp : p.Prime := Fact.out
   have h3 : Nat.Coprime 3 (p ^ 2) :=
@@ -826,7 +902,9 @@ theorem three_S_two_eq (hp5 : 5 ≤ p) :
   have hkcop : ∀ i ∈ range (p - 1), Nat.Coprime (i + 1) (p ^ 2) := coprime_succ_pow
   have hrcop : ∀ i ∈ range (p - 1), Nat.Coprime (2 * (i + 1) % p) (p ^ 2) :=
     fun i hi => coprime_of_pos_lt 2 (hrpos i hi) (Nat.mod_lt _ hp.pos)
-  -- (A) `3·S₂ = p·F`
+  -- Notation: k = i + 1, r = 2k mod p, f = ⌊2k/p⌋, so 2k = r + p·f; doubling permutes 1, …, p−1.
+  -- F = Σ f/k³,  G = Σ f·k^{p−4},  T = Σ k^{p−3}.
+  -- (A) `3·S₂ = p·F`: sum 4/r² = 1/k² + p·f/k³ over k; Σ 1/r² = Σ 1/k² = S₂.
   have hA : 3 * S (p ^ 2) p 2 = (p : ZMod (p ^ 2)) * ∑ i ∈ range (p - 1),
       ((2 * (i + 1) / p : ℕ) : ZMod (p ^ 2)) * (((i + 1 : ℕ) : ZMod (p ^ 2))⁻¹) ^ 3 := by
     have hperm := sum_range_double (p := p) (by omega) (fun k => ((k : ZMod (p ^ 2))⁻¹) ^ 2)
@@ -847,7 +925,8 @@ theorem three_S_two_eq (hp5 : 5 ≤ p) :
             refine Finset.sum_congr rfl fun i _ => ?_
             ring
     linear_combination h4
-  -- (B) the same permutation on `k^(p-3)`
+  -- (B) the same permutation on `k^(p-3)`: r^{p−3} = (2k)^{p−3} − (p−3)(2k)^{p−4}·p·f,
+  --     so T = 2^{p−3}·T − (p−3)·2^{p−4}·p·G.
   have hB : ∑ i ∈ range (p - 1), ((i + 1 : ℕ) : ZMod (p ^ 2)) ^ (p - 3) =
       2 ^ (p - 3) * ∑ i ∈ range (p - 1), ((i + 1 : ℕ) : ZMod (p ^ 2)) ^ (p - 3)
         - ((p - 3 : ℕ) : ZMod (p ^ 2)) * 2 ^ (p - 4) * p * ∑ i ∈ range (p - 1),
@@ -863,7 +942,8 @@ theorem three_S_two_eq (hp5 : 5 ≤ p) :
               mul_pow, mul_pow]
             ring
       _ = _ := by rw [Finset.sum_sub_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
-  -- Fermat facts mod p, lifted as "p·(·) = 0"
+  -- Fermat facts mod p, lifted as "p·(·) = 0" in ZMod p²:
+  --   p·(2^{p−1} − 1) = 0,   T = p·t (since T ≡ 0 mod p),   p·G = p·F (k^{p−4} ≡ k^{−3}).
   have h2 : (2 : ZMod p) ≠ 0 := by
     intro h
     have := (ZMod.natCast_eq_zero_iff 2 p).1 (by exact_mod_cast h)
@@ -919,6 +999,8 @@ theorem three_S_two_eq (hp5 : 5 ≤ p) :
       ((2 * (i + 1) / p : ℕ) : ZMod (p ^ 2)) * (((i + 1 : ℕ) : ZMod (p ^ 2))⁻¹) ^ 3
   set P := (p : ZMod (p ^ 2))
   set c := ((p - 3 : ℕ) : ZMod (p ^ 2))
+  -- Combine: 8T = 2·2^{p−1}·T − c·2^{p−1}·p·G; then 2^{p−1}T = T and c·2^{p−1}·p = −3p
+  -- (c = p − 3, p² = 0) give 6T = 3pG = 3pF = 9S₂. Cancel the unit 3: 2T = 3S₂.
   have s1 : 8 * T = 2 * 2 ^ (p - 1) * T - c * 2 ^ (p - 1) * P * G := by
     linear_combination 8 * hB - 2 * T * e1 + c * P * G * e2
   have s2 : 2 ^ (p - 1) * T = T := by
@@ -930,26 +1012,19 @@ theorem three_S_two_eq (hp5 : 5 ≤ p) :
   rw [(three_isUnit_sq hp5).mul_right_eq_zero, sub_eq_zero] at s4
   exact s4
 
-/-- Reduction `ZMod n → ZMod m` is compatible with `ratToZMod`. -/
-theorem castHom_ratToZMod {m n : ℕ} (h : m ∣ n) (q : ℚ) (hq : Nat.Coprime q.den n) :
-    ZMod.castHom h (ZMod m) (ratToZMod n q) = ratToZMod m q := by
-  unfold ratToZMod
-  rw [map_mul, map_intCast]
-  congr 1
-  have h1 : ((q.den : ZMod n)) * (q.den : ZMod n)⁻¹ = 1 := ZMod.coe_mul_inv_eq_one _ hq
-  have h2 := congrArg (ZMod.castHom h (ZMod m)) h1
-  rw [map_mul, map_natCast, map_one] at h2
-  exact (ZMod.inv_eq_of_mul_eq_one m _ _ h2).symm
-
 /-- `p` does not divide the denominator of `B_i` for `i < p − 1` (von Staudt–Clausen). -/
 theorem bernoulli_den_coprime (a : ℕ) {i : ℕ} (hi : i < p - 1) :
     Nat.Coprime (bernoulli i).den (p ^ a) := by
   have hp : p.Prime := Fact.out
   have h2 := hp.two_le
+  -- Cases: `i = 0` (B₀ = 1); `i = 2k ≥ 2` (von Staudt–Clausen); `i` odd ≥ 3 (Bᵢ = 0); `i = 1`
+  -- (B₁ = −1/2).
   rcases Nat.even_or_odd i with ⟨k, hk⟩ | hodd
   · rcases Nat.eq_zero_or_pos k with rfl | hkpos
     · have : i = 0 := by omega
       subst this; simp
+    -- von Staudt–Clausen: `B_{2k} = z − Σ 1/q` over primes `q` with `q − 1 ∣ 2k`. Each such `q`
+    -- is `≤ 2k + 1 < p`, so every `1/q` has denominator prime to `p`.
     · obtain ⟨z, hz⟩ := Bernoulli.vonStaudt_clausen k
       have hi2 : i = 2 * k := by omega
       subst hi2
@@ -965,6 +1040,7 @@ theorem bernoulli_den_coprime (a : ℕ) {i : ℕ} (hi : i < p - 1) :
       exact coprime_of_pos_lt a hq.2.1.pos (by omega)
   · rcases Nat.lt_or_ge 1 i with h1 | h1
     · rw [bernoulli_eq_zero_of_odd hodd h1]; simp
+    -- `B₁ = −1/2`, and `2` is prime to `p`.
     · have : i = 1 := by obtain ⟨j, hj⟩ := hodd; omega
       subst this
       rw [bernoulli_one, show (-1 / 2 : ℚ) = ((-1 : ℤ) : ℚ) * ((2 : ℕ) : ℚ)⁻¹ by push_cast; ring]
@@ -977,6 +1053,9 @@ theorem sum_pow_p_sub_three (hp5 : 5 ≤ p) :
     ∑ i ∈ range (p - 1), ((i + 1 : ℕ) : ZMod (p ^ 2)) ^ (p - 3) =
       (p : ZMod (p ^ 2)) * ratToZMod (p ^ 2) (bernoulli (p - 3)) := by
   have hp : p.Prime := Fact.out
+  -- Faulhaber (`sum_range_pow`) with `n = p`, exponent `p − 3`:
+  -- `Σ_{k<p} k^{p−3} = Σ_{i ≤ p−3} Bᵢ · C(p−2, i) · p^{p−2−i} / (p−2)`.
+  -- We reduce both sides mod p².
   have hF := sum_range_pow p (p - 3)
   rw [show p - 3 + 1 = p - 2 by omega] at hF
   -- left side: drop `k = 0`, cast
@@ -994,7 +1073,8 @@ theorem sum_pow_p_sub_three (hp5 : 5 ≤ p) :
   rw [show (∑ i ∈ range (p - 1), ((i + 1 : ℕ) : ZMod (p ^ 2)) ^ (p - 3)) =
       ((∑ i ∈ range (p - 1), (i + 1) ^ (p - 3) : ℕ) : ZMod (p ^ 2)) by push_cast; rfl,
     ← ratToZMod_natCast (m := p ^ 2), hF]
-  -- right side: termwise
+  -- right side: termwise. The last Faulhaber term (i = p − 3) is p·B_{p−3}; every other term
+  -- carries p^{p−2−i} with exponent ≥ 2, which is 0 in ZMod p². All denominators are prime to p.
   have hden : ∀ i ∈ range (p - 2), Nat.Coprime
       (bernoulli i * ((p - 2).choose i : ℚ) * (p : ℚ) ^ (p - 2 - i) / ((p - 2 : ℕ) : ℚ)).den
         (p ^ 2) := by
@@ -1020,6 +1100,8 @@ theorem sum_pow_p_sub_three (hp5 : 5 ≤ p) :
       ratToZMod_mul _ _ (coprime_den_mul hBi (coprime_den_natCast _)) (coprime_den_natCast _),
       ratToZMod_mul _ _ hBi (coprime_den_natCast _), ratToZMod_natCast, ratToZMod_natCast,
       ratToZMod_inv_natCast _ hcop2, Nat.cast_pow]
+  -- Split off the last term `i = p − 3`, where `C(p−2, p−3) = p − 2` cancels the denominator,
+  -- leaving `p·B_{p−3}`. All other terms vanish because they carry `p²`.
   rw [ratToZMod_sum _ _ hden, Finset.sum_congr rfl hterm,
     show range (p - 2) = range (p - 3 + 1) by congr 1; omega, Finset.sum_range_succ,
     Finset.sum_eq_zero (fun i hi => by
@@ -1046,6 +1128,7 @@ theorem natCast_mul_eq_zero_iff_pow (hp0 : 0 < p) {n : ℕ} (x : ZMod (p ^ (n + 
   have key : p * p ^ n ∣ p * x.val ↔ p ^ n ∣ x.val := Nat.mul_dvd_mul_iff_left hp0
   rwa [← pow_succ'] at key
 
+/-- `2` is a unit in `ZMod pᵃ` for `p ≥ 5`. -/
 theorem two_isUnit_pow (hp5 : 5 ≤ p) (a : ℕ) : IsUnit (2 : ZMod (p ^ a)) := by
   have hp : p.Prime := Fact.out
   have h2 : Nat.Coprime 2 (p ^ a) :=
@@ -1072,7 +1155,8 @@ theorem wolstenholme_bernoulli_core (hp5 : 5 ≤ p) :
       have h2 : 2 * S (p ^ 3) p 1 = 0 := by linear_combination hpair3 - h
       exact ((two_isUnit_pow hp5 3).mul_right_eq_zero).1 h2
   rw [step1, natCast_mul_eq_zero_iff_pow hp.pos (n := 2), castHom_S (by norm_num) 2]
-  -- `S₂ ≡ 0 (mod p²)` iff `T ≡ 0`  (Step B)
+  -- `S₂ ≡ 0 (mod p²)` iff `T ≡ 0`  (Step B: 3S₂ = 2T, with 2 and 3 units);
+  -- then `T = p·B_{p−3}` (Step A), and `p·B ≡ 0 (mod p²)` iff `B ≡ 0 (mod p)`.
   have hB := three_S_two_eq hp5
   have step2 : S (p ^ 2) p 2 = 0 ↔
       ∑ i ∈ range (p - 1), ((i + 1 : ℕ) : ZMod (p ^ 2)) ^ (p - 3) = 0 := by
