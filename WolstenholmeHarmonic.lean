@@ -42,6 +42,9 @@ A human-readable proof, with no Lean, is in `PROOF.md`.
    * `wolstenholme_bernoulli_core`, then `wolstenholme_bernoulli`.
 6. **Corollaries.** `harmonic_num_dvd_sq`: `p² ∣ num(H_{p−1})`, and
    `wolstenholme_theorem_mod_p_cube`: `C(2p−1, p−1) ≡ 1 (mod p³)` (Wolstenholme, 1862).
+7. **Rational forms.** `harmonic2` (`H_{n,2} = Σ 1/k²`), `harmonic_iff_harmonic2`
+   (`p³ ∣ num H_{p−1} ⇔ p² ∣ num H_{p−1,2}`), `glaisher` (`3·H_{p−1,2} ≡ 2p·B_{p−3} (mod p²)`),
+   and `voronoiF_mod_p` (`Σ ⌊2k/p⌋/k³ ≡ 2·B_{p−3} (mod p)`).
 
 Toolchain: Lean v4.33.1, Mathlib 0df444a3 (as in Formal Conjectures). No `sorry`; both final
 theorems depend only on [propext, Classical.choice, Quot.sound]. `IsWolstenholmePrime` here is a
@@ -879,34 +882,46 @@ theorem three_isUnit_sq (hp5 : 5 ≤ p) : IsUnit (3 : ZMod (p ^ 2)) := by
     Nat.Coprime.pow_right 2 ((Nat.coprime_primes Nat.prime_three hp).2 (by omega))
   simpa using (ZMod.isUnit_iff_coprime 3 (p ^ 2)).2 h3
 
-/-- Step B: `3·H_{p-1,2} ≡ 2·∑_{k=1}^{p-1} k^{p-3} (mod p²)`, via `k ↦ 2k mod p` (no Kummer). -/
-theorem three_S_two_eq (hp5 : 5 ≤ p) :
-    3 * S (p ^ 2) p 2 = 2 * ∑ i ∈ range (p - 1), ((i + 1 : ℕ) : ZMod (p ^ 2)) ^ (p - 3) := by
+omit [Fact p.Prime] in
+/-- Doubling, as an identity in `ZMod p²`: `2k = (2k mod p) + p·⌊2k/p⌋` with `k = i + 1`. -/
+theorem double_cast (i : ℕ) : ((2 * (i + 1) % p : ℕ) : ZMod (p ^ 2)) =
+    2 * ((i + 1 : ℕ) : ZMod (p ^ 2)) - p * ((2 * (i + 1) / p : ℕ) : ZMod (p ^ 2)) := by
+  have h' : ((2 * (i + 1) % p : ℕ) : ZMod (p ^ 2)) + p * ((2 * (i + 1) / p : ℕ) : ZMod (p ^ 2))
+      = 2 * ((i + 1 : ℕ) : ZMod (p ^ 2)) := by
+    have := congrArg (Nat.cast : ℕ → ZMod (p ^ 2)) (Nat.mod_add_div (2 * (i + 1)) p)
+    rw [Nat.cast_add, Nat.cast_mul, Nat.cast_mul, Nat.cast_ofNat] at this
+    exact this
+  linear_combination h'
+
+/-- For `k = 1, …, p − 1` and `p ≥ 5`, the residue `2k mod p` is a unit mod `p²`. -/
+theorem double_coprime (hp5 : 5 ≤ p) :
+    ∀ i ∈ range (p - 1), Nat.Coprime (2 * (i + 1) % p) (p ^ 2) := by
   have hp : p.Prime := Fact.out
-  have hP2 : (p : ZMod (p ^ 2)) ^ 2 = 0 := natCast_sq_self
+  intro i hi
+  have := mem_range.1 hi
+  refine coprime_of_pos_lt 2 ?_ (Nat.mod_lt _ hp.pos)
+  rw [Nat.pos_iff_ne_zero]
+  intro h
+  rcases (Nat.Prime.dvd_mul hp).1 (Nat.dvd_of_mod_eq_zero h) with h2 | h2
+  · have := Nat.le_of_dvd (by norm_num) h2; omega
+  · have := Nat.le_of_dvd (Nat.succ_pos i) h2; omega
+
+/-- `F = Σ_{k=1}^{p−1} ⌊2k/p⌋ / k³` in `ZMod m` (a Voronoi–Lerch-type sum). -/
+def Fz (m p : ℕ) : ZMod m :=
+  ∑ i ∈ range (p - 1), ((2 * (i + 1) / p : ℕ) : ZMod m) * invK m i ^ 3
+
+/-- `T = Σ_{k=1}^{p−1} k^{p−3}` in `ZMod m`. -/
+def Tz (m p : ℕ) : ZMod m := ∑ i ∈ range (p - 1), ((i + 1 : ℕ) : ZMod m) ^ (p - 3)
+
+/-- (B1) `3·S₂ ≡ p·F (mod p²)`: sum `4/r_k² = 1/k² + p·f_k/k³` over `k`, where
+`2k = r_k + p·f_k` and `k ↦ r_k` permutes `1, …, p − 1`. -/
+theorem three_S_two_eq_p_F (hp5 : 5 ≤ p) :
+    3 * S (p ^ 2) p 2 = (p : ZMod (p ^ 2)) * Fz (p ^ 2) p := by
   have hdiv : ∀ i ∈ range (p - 1), ((2 * (i + 1) % p : ℕ) : ZMod (p ^ 2)) =
-      2 * ((i + 1 : ℕ) : ZMod (p ^ 2)) - p * ((2 * (i + 1) / p : ℕ) : ZMod (p ^ 2)) := by
-    intro i _
-    have h' : ((2 * (i + 1) % p : ℕ) : ZMod (p ^ 2)) + p * ((2 * (i + 1) / p : ℕ) : ZMod (p ^ 2))
-        = 2 * ((i + 1 : ℕ) : ZMod (p ^ 2)) := by
-      have := congrArg (Nat.cast : ℕ → ZMod (p ^ 2)) (Nat.mod_add_div (2 * (i + 1)) p)
-      rw [Nat.cast_add, Nat.cast_mul, Nat.cast_mul, Nat.cast_ofNat] at this
-      exact this
-    linear_combination h'
-  have hrpos : ∀ i ∈ range (p - 1), 0 < 2 * (i + 1) % p := by
-    intro i hi
-    have := mem_range.1 hi
-    rw [Nat.pos_iff_ne_zero]
-    intro h
-    rcases (Nat.Prime.dvd_mul hp).1 (Nat.dvd_of_mod_eq_zero h) with h2 | h2
-    · have := Nat.le_of_dvd (by norm_num) h2; omega
-    · have := Nat.le_of_dvd (Nat.succ_pos i) h2; omega
+      2 * ((i + 1 : ℕ) : ZMod (p ^ 2)) - p * ((2 * (i + 1) / p : ℕ) : ZMod (p ^ 2)) :=
+    fun i _ => double_cast i
   have hkcop : ∀ i ∈ range (p - 1), Nat.Coprime (i + 1) (p ^ 2) := coprime_succ_pow
-  have hrcop : ∀ i ∈ range (p - 1), Nat.Coprime (2 * (i + 1) % p) (p ^ 2) :=
-    fun i hi => coprime_of_pos_lt 2 (hrpos i hi) (Nat.mod_lt _ hp.pos)
-  -- Notation: k = i + 1, r = 2k mod p, f = ⌊2k/p⌋, so 2k = r + p·f; doubling permutes 1, …, p−1.
-  -- F = Σ f/k³,  G = Σ f·k^{p−4},  T = Σ k^{p−3}.
-  -- (A) `3·S₂ = p·F`: sum 4/r² = 1/k² + p·f/k³ over k; Σ 1/r² = Σ 1/k² = S₂.
+  have hrcop := double_coprime hp5
   have hA : 3 * S (p ^ 2) p 2 = (p : ZMod (p ^ 2)) * ∑ i ∈ range (p - 1),
       ((2 * (i + 1) / p : ℕ) : ZMod (p ^ 2)) * (((i + 1 : ℕ) : ZMod (p ^ 2))⁻¹) ^ 3 := by
     have hperm := sum_range_double (p := p) (by omega) (fun k => ((k : ZMod (p ^ 2))⁻¹) ^ 2)
@@ -927,8 +942,17 @@ theorem three_S_two_eq (hp5 : 5 ≤ p) :
             refine Finset.sum_congr rfl fun i _ => ?_
             ring
     linear_combination h4
-  -- (B) the same permutation on `k^(p-3)`: r^{p−3} = (2k)^{p−3} − (p−3)(2k)^{p−4}·p·f,
-  --     so T = 2^{p−3}·T − (p−3)·2^{p−4}·p·G.
+  exact hA
+
+/-- (B2) `2·T ≡ p·F (mod p²)`: the same permutation on `k ↦ k^{p−3}`, using
+`r^{p−3} = (2k)^{p−3} − (p−3)(2k)^{p−4}·p·f` and three Fermat facts. -/
+theorem two_T_eq_p_F (hp5 : 5 ≤ p) : 2 * Tz (p ^ 2) p = (p : ZMod (p ^ 2)) * Fz (p ^ 2) p := by
+  have hp : p.Prime := Fact.out
+  have hP2 : (p : ZMod (p ^ 2)) ^ 2 = 0 := natCast_sq_self
+  have hdiv : ∀ i ∈ range (p - 1), ((2 * (i + 1) % p : ℕ) : ZMod (p ^ 2)) =
+      2 * ((i + 1 : ℕ) : ZMod (p ^ 2)) - p * ((2 * (i + 1) / p : ℕ) : ZMod (p ^ 2)) :=
+    fun i _ => double_cast i
+  have hkcop : ∀ i ∈ range (p - 1), Nat.Coprime (i + 1) (p ^ 2) := coprime_succ_pow
   have hB : ∑ i ∈ range (p - 1), ((i + 1 : ℕ) : ZMod (p ^ 2)) ^ (p - 3) =
       2 ^ (p - 3) * ∑ i ∈ range (p - 1), ((i + 1 : ℕ) : ZMod (p ^ 2)) ^ (p - 3)
         - ((p - 3 : ℕ) : ZMod (p ^ 2)) * 2 ^ (p - 4) * p * ∑ i ∈ range (p - 1),
@@ -1002,17 +1026,26 @@ theorem three_S_two_eq (hp5 : 5 ≤ p) :
   set P := (p : ZMod (p ^ 2))
   set c := ((p - 3 : ℕ) : ZMod (p ^ 2))
   -- Combine: 8T = 2·2^{p−1}·T − c·2^{p−1}·p·G; then 2^{p−1}T = T and c·2^{p−1}·p = −3p
-  -- (c = p − 3, p² = 0) give 6T = 3pG = 3pF = 9S₂. Cancel the unit 3: 2T = 3S₂.
+  -- (c = p − 3, p² = 0) give 6T = 3pG.
   have s1 : 8 * T = 2 * 2 ^ (p - 1) * T - c * 2 ^ (p - 1) * P * G := by
     linear_combination 8 * hB - 2 * T * e1 + c * P * G * e2
   have s2 : 2 ^ (p - 1) * T = T := by
     rw [ht]; linear_combination t * h2F
   have s3 : c * 2 ^ (p - 1) * P * G = -3 * P * G := by
     rw [hc]; linear_combination (P - 3) * G * h2F + G * hP2
-  have s4 : 3 * (3 * S (p ^ 2) p 2 - 2 * T) = 0 := by
-    linear_combination 3 * hA - 3 * hGF - (s1 + 2 * s2 - s3)
+  -- 6T = 3pG and pG = pF give 3·(2T − pF) = 0; cancel the unit 3.
+  have s4 : 3 * (2 * T - P * F) = 0 := by
+    linear_combination (s1 + 2 * s2 - s3) + 3 * hGF
   rw [(three_isUnit_sq hp5).mul_right_eq_zero, sub_eq_zero] at s4
   exact s4
+
+/-- Step B: `3·S₂ ≡ 2·Σ_{k=1}^{p−1} k^{p−3} (mod p²)`: eliminate `F` between (B1) and (B2). -/
+theorem three_S_two_eq (hp5 : 5 ≤ p) :
+    3 * S (p ^ 2) p 2 = 2 * ∑ i ∈ range (p - 1), ((i + 1 : ℕ) : ZMod (p ^ 2)) ^ (p - 3) := by
+  have h1 := three_S_two_eq_p_F hp5
+  have h2 := two_T_eq_p_F hp5
+  unfold Tz at h2
+  linear_combination h1 - h2
 
 /-- `p` does not divide the denominator of `B_i` for `i < p − 1` (von Staudt–Clausen). -/
 theorem bernoulli_den_coprime (a : ℕ) {i : ℕ} (hi : i < p - 1) :
@@ -1237,6 +1270,171 @@ theorem wolstenholme_theorem_mod_p_cube (hp5 : 5 ≤ p) :
     castHom_S (by norm_num : 3 ≤ 4) 1] at h3
   rw [← ZMod.natCast_eq_natCast_iff, Nat.cast_one]
   linear_combination h3 + 2 * p_mul_S_one_cube hp5
+
+
+/-! ### Rational forms: `H_{p−1,2}`, Glaisher's congruence, and the sum `F` -/
+
+section RationalForms
+variable {m : ℕ}
+
+/-- `(k^e)⁻¹ = (k⁻¹)^e` in `ZMod m` when `k` is a unit mod `m`. -/
+theorem inv_natCast_pow (k e : ℕ) (hk : Nat.Coprime k m) :
+    (((k ^ e : ℕ) : ZMod m))⁻¹ = (((k : ℕ) : ZMod m)⁻¹) ^ e := by
+  apply ZMod.inv_eq_of_mul_eq_one
+  rw [Nat.cast_pow, ← mul_pow, ZMod.coe_mul_inv_eq_one _ hk, one_pow]
+
+/-- The denominator of `1/n` is prime to `m` when `n` is. -/
+theorem coprime_den_inv_natCast (n : ℕ) (hn : Nat.Coprime n m) :
+    Nat.Coprime ((n : ℚ)⁻¹).den m := by
+  rw [Rat.inv_natCast_den]; split_ifs
+  · exact Nat.coprime_one_left m
+  · exact hn
+
+end RationalForms
+
+/-- The second-order harmonic number `H_{n,2} = Σ_{k=1}^{n} 1/k²`, as a rational number. -/
+def harmonic2 (n : ℕ) : ℚ := ∑ i ∈ range n, ((((i + 1) ^ 2 : ℕ) : ℚ))⁻¹
+
+/-- `H_{n+1,2} = H_{n,2} + 1/(n+1)²`. -/
+theorem harmonic2_succ (n : ℕ) :
+    harmonic2 (n + 1) = harmonic2 n + ((((n + 1) ^ 2 : ℕ) : ℚ))⁻¹ :=
+  Finset.sum_range_succ _ _
+
+/-- The denominator of `H_{n,2}` divides `(n!)²`. -/
+theorem harmonic2_den_dvd (n : ℕ) : (harmonic2 n).den ∣ n.factorial ^ 2 := by
+  induction n with
+  | zero => simp [harmonic2]
+  | succ n ih =>
+    rw [harmonic2_succ, Nat.factorial_succ, mul_pow]
+    refine (Rat.add_den_dvd _ _).trans ?_
+    rw [Rat.inv_natCast_den, if_neg (pow_ne_zero 2 (Nat.succ_ne_zero n)), mul_comm]
+    exact Nat.mul_dvd_mul_left _ ih
+
+
+/-- For `k ≤ p − 1`, the denominator of `H_{k,2}` is prime to `p`. -/
+theorem harmonic2_den_not_dvd_le {k : ℕ} (hk : k ≤ p - 1) : ¬ p ∣ (harmonic2 k).den := by
+  have hp : p.Prime := Fact.out
+  intro h
+  have h2 := h.trans (harmonic2_den_dvd k)
+  have := (Nat.Prime.dvd_factorial hp).1 (hp.dvd_of_dvd_pow h2)
+  have := hp.two_le
+  omega
+
+/-- Partial sums `H_{k,2}`, `k ≤ p − 1`, reduce to `Σ 1/k²` in `ZMod (p^n)`. -/
+theorem ratToZMod_harmonic2_le (n : ℕ) :
+    ∀ k, k ≤ p - 1 → ratToZMod (p ^ n) (harmonic2 k) = ∑ i ∈ range k, invK (p ^ n) i ^ 2 := by
+  have hp : p.Prime := Fact.out
+  have cop : ∀ d, ¬ p ∣ d → Nat.Coprime d (p ^ n) := fun d hd =>
+    Nat.Coprime.pow_right n (Nat.Coprime.symm ((Nat.Prime.coprime_iff_not_dvd hp).2 hd))
+  intro k
+  induction k with
+  | zero => intro _; simpa [harmonic2] using ratToZMod_natCast (m := p ^ n) 0
+  | succ k ih =>
+    intro hk
+    have hk1 : Nat.Coprime (k + 1) (p ^ n) := cop _ (fun h => by
+      have := Nat.le_of_dvd (Nat.succ_pos k) h; omega)
+    have hk2 : Nat.Coprime ((k + 1) ^ 2) (p ^ n) := Nat.Coprime.pow_left 2 hk1
+    rw [harmonic2_succ, ratToZMod_add' _ _ (cop _ (harmonic2_den_not_dvd_le (by omega)))
+      (coprime_den_inv_natCast _ hk2), ih (by omega), Finset.sum_range_succ,
+      ratToZMod_inv_natCast _ hk2, inv_natCast_pow _ _ hk1]
+    rfl
+
+/-- `H_{p−1,2}` reduces to the power sum `S₂` in `ZMod (p^n)`. -/
+theorem ratToZMod_harmonic2 (n : ℕ) :
+    ratToZMod (p ^ n) (harmonic2 (p - 1)) = S (p ^ n) p 2 := by
+  rw [ratToZMod_harmonic2_le n (p - 1) le_rfl]
+  rfl
+
+/-- Step 0 in rational form: `p³ ∣ num(H_{p−1})` iff `p² ∣ num(H_{p−1,2})`. -/
+theorem harmonic_iff_harmonic2 (hp5 : 5 ≤ p) :
+    ((p ^ 3 : ℕ) : ℤ) ∣ (harmonic (p - 1)).num ↔ ((p ^ 2 : ℕ) : ℤ) ∣ (harmonic2 (p - 1)).num := by
+  have hp : p.Prime := Fact.out
+  rw [← ratToZMod_eq_zero_iff 3 _ harmonic_den_not_dvd, ratToZMod_harmonic,
+    ← ratToZMod_eq_zero_iff 2 _ (harmonic2_den_not_dvd_le le_rfl), ratToZMod_harmonic2]
+  have hpair3 : 2 * S (p ^ 3) p 1 + (p : ZMod (p ^ 3)) * S (p ^ 3) p 2 = 0 := by
+    have h := harmonic_pairing hp5
+    rw [natCast_mul_eq_zero_iff] at h
+    rw [map_add, map_mul, map_mul, map_ofNat, map_natCast, castHom_S (by norm_num : 3 ≤ 4) 1,
+      castHom_S (by norm_num : 3 ≤ 4) 2] at h
+    exact h
+  have step1 : S (p ^ 3) p 1 = 0 ↔ (p : ZMod (p ^ 3)) * S (p ^ 3) p 2 = 0 := by
+    constructor
+    · intro h; linear_combination hpair3 - 2 * h
+    · intro h
+      have h2 : 2 * S (p ^ 3) p 1 = 0 := by linear_combination hpair3 - h
+      exact ((two_isUnit_pow hp5 3).mul_right_eq_zero).1 h2
+  rw [step1, natCast_mul_eq_zero_iff_pow hp.pos (n := 2), castHom_S (by norm_num) 2]
+
+/-- **Glaisher (1900):** `3·H_{p−1,2} ≡ 2p·B_{p−3} (mod p²)`, i.e.
+`H_{p−1,2} ≡ (2/3)·p·B_{p−3} (mod p²)`, for primes `p ≥ 5`. -/
+theorem glaisher (hp5 : 5 ≤ p) :
+    ((p ^ 2 : ℕ) : ℤ) ∣ (3 * harmonic2 (p - 1) - 2 * p * bernoulli (p - 3)).num := by
+  have hp : p.Prime := Fact.out
+  have cop : ∀ d, ¬ p ∣ d → Nat.Coprime d (p ^ 2) := fun d hd =>
+    Nat.Coprime.pow_right 2 (Nat.Coprime.symm ((Nat.Prime.coprime_iff_not_dvd hp).2 hd))
+  have hH := cop _ (harmonic2_den_not_dvd_le (p := p) le_rfl)
+  have hB := bernoulli_den_coprime (p := p) 2 (i := p - 3) (by omega)
+  have hq : (3 * harmonic2 (p - 1) - 2 * p * bernoulli (p - 3) : ℚ) =
+      ((3 : ℤ) : ℚ) * harmonic2 (p - 1) + ((-2 * p : ℤ) : ℚ) * bernoulli (p - 3) := by
+    push_cast; ring
+  have hden : Nat.Coprime (3 * harmonic2 (p - 1) - 2 * p * bernoulli (p - 3) : ℚ).den (p ^ 2) := by
+    rw [hq]
+    exact coprime_den_add (coprime_den_mul (coprime_den_intCast _) hH)
+      (coprime_den_mul (coprime_den_intCast _) hB)
+  rw [← ratToZMod_eq_zero_iff 2 _ (fun h => (Nat.Prime.coprime_iff_not_dvd hp).1
+    (Nat.Coprime.coprime_dvd_right (dvd_pow_self p two_ne_zero) hden).symm h), hq,
+    ratToZMod_add' _ _ (coprime_den_mul (coprime_den_intCast _) hH)
+      (coprime_den_mul (coprime_den_intCast _) hB),
+    ratToZMod_mul _ _ (coprime_den_intCast _) hH, ratToZMod_mul _ _ (coprime_den_intCast _) hB,
+    ratToZMod_intCast, ratToZMod_intCast, ratToZMod_harmonic2]
+  push_cast
+  linear_combination three_S_two_eq hp5 + 2 * sum_pow_p_sub_three hp5
+
+/-- The Voronoi–Lerch-type sum `F = Σ_{k=1}^{p−1} ⌊2k/p⌋ / k³`, as a rational number. -/
+def voronoiF (p : ℕ) : ℚ :=
+  ∑ i ∈ range (p - 1), ((2 * (i + 1) / p : ℕ) : ℚ) * ((((i + 1) ^ 3 : ℕ) : ℚ))⁻¹
+
+/-- `F` reduces to `Fz` in `ZMod (p^n)`. -/
+theorem ratToZMod_voronoiF (n : ℕ) : ratToZMod (p ^ n) (voronoiF p) = Fz (p ^ n) p := by
+  have hcop := coprime_succ_pow (p := p) (a := n)
+  have hterm : ∀ i ∈ range (p - 1), Nat.Coprime
+      (((2 * (i + 1) / p : ℕ) : ℚ) * ((((i + 1) ^ 3 : ℕ) : ℚ))⁻¹).den (p ^ n) := fun i hi =>
+    coprime_den_mul (coprime_den_natCast _)
+      (coprime_den_inv_natCast _ (Nat.Coprime.pow_left 3 (hcop i hi)))
+  rw [voronoiF, ratToZMod_sum _ _ hterm]
+  refine Finset.sum_congr rfl fun i hi => ?_
+  rw [ratToZMod_mul _ _ (coprime_den_natCast _)
+      (coprime_den_inv_natCast _ (Nat.Coprime.pow_left 3 (hcop i hi))),
+    ratToZMod_natCast, ratToZMod_inv_natCast _ (Nat.Coprime.pow_left 3 (hcop i hi)),
+    inv_natCast_pow _ _ (hcop i hi)]
+  rfl
+
+/-- `F ≡ 2·B_{p−3} (mod p)` for the Voronoi–Lerch-type sum `F = Σ ⌊2k/p⌋ / k³`. -/
+theorem voronoiF_mod_p (hp5 : 5 ≤ p) : (p : ℤ) ∣ (voronoiF p - 2 * bernoulli (p - 3)).num := by
+  have hp : p.Prime := Fact.out
+  have cop : ∀ a d, ¬ p ∣ d → Nat.Coprime d (p ^ a) := fun a d hd =>
+    Nat.Coprime.pow_right a (Nat.Coprime.symm ((Nat.Prime.coprime_iff_not_dvd hp).2 hd))
+  have hcop := coprime_succ_pow (p := p) (a := 2)
+  have hFden : Nat.Coprime (voronoiF p).den (p ^ 2) := by
+    rw [voronoiF]
+    exact coprime_den_sum _ _ fun i hi => coprime_den_mul (coprime_den_natCast _)
+      (coprime_den_inv_natCast _ (Nat.Coprime.pow_left 3 (hcop i hi)))
+  have hB := bernoulli_den_coprime (p := p) 2 (i := p - 3) (by omega)
+  have hq : (voronoiF p - 2 * bernoulli (p - 3) : ℚ) =
+      voronoiF p + ((-2 : ℤ) : ℚ) * bernoulli (p - 3) := by push_cast; ring
+  have hden2 : Nat.Coprime (voronoiF p - 2 * bernoulli (p - 3) : ℚ).den (p ^ 2) := by
+    rw [hq]; exact coprime_den_add hFden (coprime_den_mul (coprime_den_intCast _) hB)
+  -- in ZMod p²: p·(F − 2B) = 3S₂ − 2pB = 0 by (B1) and Glaisher's congruence
+  have hz : (p : ZMod (p ^ 2)) * ratToZMod (p ^ 2) (voronoiF p - 2 * bernoulli (p - 3)) = 0 := by
+    rw [hq, ratToZMod_add' _ _ hFden (coprime_den_mul (coprime_den_intCast _) hB),
+      ratToZMod_mul _ _ (coprime_den_intCast _) hB, ratToZMod_intCast, ratToZMod_voronoiF]
+    push_cast
+    linear_combination three_S_two_eq hp5 + 2 * sum_pow_p_sub_three hp5 - three_S_two_eq_p_F hp5
+  have h1 := (natCast_mul_eq_zero_iff_pow hp.pos (n := 1) _).1 hz
+  rw [castHom_ratToZMod _ _ hden2] at h1
+  have := (ratToZMod_eq_zero_iff 1 _ (fun h => (Nat.Prime.coprime_iff_not_dvd hp).1
+    (Nat.Coprime.coprime_dvd_right (dvd_pow_self p two_ne_zero) hden2).symm h)).1 h1
+  simpa using this
 
 end BernoulliPart
 

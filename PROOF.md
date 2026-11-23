@@ -17,8 +17,10 @@ stronger.)
   (Lean: `ratToZMod`). It is additive and multiplicative, and it commutes with reduction from
   `ℤ/pⁿ` to `ℤ/pᵐ` for `m ≤ n`. Also, `q ≡ 0 (mod pⁿ)` holds exactly when `pⁿ` divides the
   numerator of `q`.
-- **Denominators.** The denominator of `H_n` divides `n!`, so `H_{p−1} mod pⁿ = S₁` and
-  `H_{p−1,2} mod pⁿ = S₂`. (Lean: `harmonic_den_dvd_factorial`, `ratToZMod_harmonic`.)
+- **Denominators.** The denominator of `H_n` divides `n!`, so `H_{p−1} mod pⁿ = S₁`.
+  (Lean: `harmonic_den_dvd_factorial`, `ratToZMod_harmonic`.) Likewise the denominator of
+  `H_{n,2}` divides `(n!)²`, so `H_{p−1,2} mod pⁿ = S₂` (Lean: `harmonic2`,
+  `harmonic2_den_dvd`, `ratToZMod_harmonic2`).
 - **Wolstenholme primes.** `p` is a Wolstenholme prime when `C := C(2p−1, p−1) ≡ 1 (mod p⁴)`.
 
 ## Part I: `C − 1 ≡ 2p·H_{p−1} (mod p⁴)`, hence `wolstenholme_harmonic`
@@ -28,6 +30,9 @@ stronger.)
 *Proof.* Modulo `p`, the map `k ↦ k⁻¹` permutes `(ℤ/p)ˣ`, so `S_j ≡ Σ_{u ∈ (ℤ/p)ˣ} u^j`. Let `g` be
 a generator of `(ℤ/p)ˣ`. Since `p − 1 ∤ j`, we have `g^j ≠ 1`. Multiplying the sum by `g^j` only
 permutes its terms, so `(g^j − 1)·Σ u^j = 0`, and therefore `Σ u^j = 0`. ∎
+
+(In Lean, the last step is Mathlib's `FiniteField.sum_pow_units`, applied after the substitution
+`u ↦ u⁻¹`.)
 
 In particular `S₁ ≡ S₂ ≡ S₃ ≡ 0 (mod p)`, because `p − 1 ≥ 4`.
 
@@ -101,7 +106,8 @@ Hence
 
     S₁ ≡ 0 (mod p³)  ⇔  p·S₂ ≡ 0 (mod p³)  ⇔  S₂ ≡ 0 (mod p²),
 
-that is, `p³ ∣ num(H_{p−1})` if and only if `p² ∣ num(H_{p−1,2})`.
+In terms of rationals: `p³ ∣ num(H_{p−1})` if and only if `p² ∣ num(H_{p−1,2})`
+(`harmonic_iff_harmonic2`).
 
 Mathlib has no Kummer congruence, so the usual route from here to `B_{p−3}` is not available.
 Steps A and B below replace it.
@@ -128,24 +134,28 @@ Faulhaber's formula (Mathlib's `sum_range_pow`) reads
 
     2k = r_k + p·f_k,    1 ≤ r_k ≤ p−1,    f_k = ⌊2k/p⌋ ∈ {0, 1}.
 
-Because `2` is invertible mod `p`, the map `k ↦ r_k` permutes `1, …, p−1` (`sum_range_double`).
+Because `2` is invertible mod `p`, the map `k ↦ r_k` permutes `1, …, p−1`. This holds for every
+odd prime `p` (`sum_range_double`, `p ≥ 3`).
 So any sum of `g(k)` over `k` equals the sum of `g(r_k)`. Apply this to two choices of `g`,
 working in `ℤ/p²`:
 
-1. **`g(k) = k⁻²`.** From `r_k = 2k − p·f_k` we get
-   `1/r_k = (1/(2k))·(1 + p·f_k/(2k))`, hence
+1. **`g(k) = k⁻²`.** In general, if `k, r, f` are natural numbers with `r ≡ 2k − p·f (mod p²)`
+   and `k`, `r` prime to `p`, then `1/r = (1/(2k))·(1 + p·f/(2k))` in `ℤ/p²`, hence
 
-       4/r_k² = 1/k² + p·f_k/k³                         (`inv_sq_double`)
+       4/r² ≡ 1/k² + p·f/k³  (mod p²)                    (`inv_sq_double`)
 
-   Summing over `k`: `4S₂ = S₂ + p·F`, where `F = Σ f_k/k³`. Therefore
+   Apply this to `r_k`, `f_k`, sum over `k`, and get `4S₂ = S₂ + p·F`, where `F = Σ f_k/k³`
+   (Lean: `Fz`). Therefore
 
-       3·S₂ ≡ p·F  (mod p²).                                              (B1)
+       3·S₂ ≡ p·F  (mod p²).                              (B1, `three_S_two_eq_p_F`)
 
-2. **`g(k) = k^{p−3}`.** Since `(p·f_k)² = 0`, the binomial expansion stops after two terms:
+2. **`g(k) = k^{p−3}`.** In general, if `r ≡ 2k − p·f (mod p²)`, then for every exponent `n`
 
-       r_k^{p−3} = (2k)^{p−3} − (p−3)·(2k)^{p−4}·p·f_k        (`pow_double`)
+       r^n ≡ (2k)^n − n·(2k)^{n−1}·p·f  (mod p²)        (`pow_double`)
 
-   Summing over `k`, with `G = Σ f_k·k^{p−4}`:
+   because `(p·f)² = 0` stops the binomial expansion after two terms. Take `n = p − 3`.
+
+   Summing over `k`, with `T = Σ k^{p−3}` (Lean: `Tz`) and `G = Σ f_k·k^{p−4}`:
 
        T = 2^{p−3}·T − (p−3)·2^{p−4}·p·G.
 
@@ -157,7 +167,7 @@ working in `ℤ/p²`:
    Together with `(p−3)·p ≡ −3p`, this gives `8T ≡ 2T + 3p·F`, that is, `6T ≡ 3p·F`. Cancelling
    the unit `3`:
 
-       2·T ≡ p·F  (mod p²).                                               (B2)
+       2·T ≡ p·F  (mod p²).                               (B2, `two_T_eq_p_F`)
 
 Eliminating `F` between (B1) and (B2) gives `3·S₂ ≡ 2·T (mod p²)`. ∎
 
@@ -177,8 +187,9 @@ It agrees with `bernoulli` at every index `≠ 1`, in particular at `p − 3`.
 
 ## Remarks
 
-- Steps A and B together recover Glaisher's congruence `H_{p−1,2} ≡ (2/3)·p·B_{p−3} (mod p²)`.
-  The weighted sum `F = Σ ⌊2k/p⌋/k³` is of the Voronoi–Lerch type. From (B1) one also gets the
-  classical `F ≡ 2B_{p−3} (mod p)`.
+- Steps A and B together give Glaisher's congruence `3·H_{p−1,2} ≡ 2p·B_{p−3} (mod p²)`, that is,
+  `H_{p−1,2} ≡ (2/3)·p·B_{p−3}` (Lean: `glaisher`, stated as `p² ∣ num(3H_{p−1,2} − 2p·B_{p−3})`).
+- Combined with (B1), it gives the classical `F ≡ 2B_{p−3} (mod p)` for the Voronoi–Lerch-type
+  sum `F = Σ ⌊2k/p⌋/k³` (Lean: `voronoiF`, `voronoiF_mod_p`).
 - Every step works in `ℤ/pⁿ`, and rationals enter only through the reduction map. This is why
   the Lean file separates a generic layer for reducing rationals from the number theory.

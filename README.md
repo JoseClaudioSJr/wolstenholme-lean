@@ -16,6 +16,10 @@ In Formal Conjectures, the last two are `sorry`. The first links to an external 
 it is a corollary of the stronger congruence `C(2p−1, p−1) − 1 ≡ 2p·H_{p−1} (mod p⁴)`, together
 with `H_{p−1} ≡ 0 (mod p²)` (`harmonic_num_dvd_sq`).
 
+Also proved along the way: Glaisher's congruence `3·H_{p−1,2} ≡ 2p·B_{p−3} (mod p²)` (`glaisher`),
+the equivalence `p³ ∣ num H_{p−1} ⇔ p² ∣ num H_{p−1,2}` (`harmonic_iff_harmonic2`), and
+`Σ_{k<p} ⌊2k/p⌋/k³ ≡ 2·B_{p−3} (mod p)` (`voronoiF_mod_p`).
+
 Here `IsWolstenholmePrime p` means `p > 7`, `p` is prime, and `C(2p−1, p−1) ≡ 1 (mod p⁴)`.
 
 Mathlib's `bernoulli'` uses the convention `B₁ = +1/2`, while `bernoulli` uses `B₁ = −1/2`. They agree at
@@ -38,13 +42,14 @@ which Mathlib does not have.
 
 - `PROOF.md`: the complete proof in ordinary mathematical notation, with no Lean, step by step
   and with the Lean name of each step.
+- `AUDIT.md`: a claim-by-claim check that `PROOF.md` says exactly what the Lean code proves.
 - `WolstenholmeHarmonic.lean`: the proofs, about 1,100 lines. They are organised in reusable layers:
   generic symmetric-function identities, reduction of rationals into `ZMod m`, then the
   number theory.
 - `FormalConjecturesCheck.lean`: the Formal Conjectures definition and all three statements, copied
   verbatim in their own namespace (Apache-2.0, see the file header), each proved in a few lines
   from the main file.
-- `scripts/check_axioms.sh`: fails unless all seven exported theorems depend only on
+- `scripts/check_axioms.sh`: fails unless all ten theorems listed in `scripts/Axioms.lean` depend only on
   `propext`, `Classical.choice` and `Quot.sound`. This also catches any `sorry`.
 
 ## Proof strategy

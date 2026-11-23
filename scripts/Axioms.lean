@@ -7,3 +7,6 @@ import FormalConjecturesCheck
 #print axioms WolstenholmeHarmonic.wolstenholme_bernoulli
 #print axioms WolstenholmeHarmonic.wolstenholme_theorem_mod_p_cube
 #print axioms WolstenholmeHarmonic.harmonic_num_dvd_sq
+#print axioms WolstenholmeHarmonic.harmonic_iff_harmonic2
+#print axioms WolstenholmeHarmonic.glaisher
+#print axioms WolstenholmeHarmonic.voronoiF_mod_p
