@@ -1,4 +1,8 @@
-import WolstenholmeHarmonic
+module
+
+public import WolstenholmeHarmonic
+
+@[expose] public section
 
 /-!
 # Kummer's congruence (weak form) and Jensen's theorem on irregular primes

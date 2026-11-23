@@ -8,7 +8,11 @@ Licensed under the Apache License, Version 2.0 (see LICENSE).
 The two theorems are new: they reduce FC's `infinitude_of_irregularprimes` to Kummer's criterion
 (in fact to its easy direction), using Jensen's theorem from `Jensen.lean`.
 -/
-import Jensen
+module
+
+public import Jensen
+
+@[expose] public section
 
 open scoped NumberField
 

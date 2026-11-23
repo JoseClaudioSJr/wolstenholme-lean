@@ -8,7 +8,11 @@ Licensed under the Apache License, Version 2.0 (see LICENSE).
 
 The proof is new.
 -/
-import Kummer
+module
+
+public import Kummer
+
+@[expose] public section
 
 /-!
 # Erdős Problem 291: Steinerberger's criterion

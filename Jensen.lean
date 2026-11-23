@@ -1,4 +1,8 @@
-import Kummer
+module
+
+public import Kummer
+
+@[expose] public section
 
 /-!
 # Jensen's theorem: infinitely many irregular primes (Bernoulli form)

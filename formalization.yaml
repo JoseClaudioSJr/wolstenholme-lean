@@ -1,0 +1,137 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+version: "v0.4"
+
+project:
+  name: "Wolstenholme primes: harmonic and Bernoulli characterizations"
+  description: >-
+    A complete Lean 4 formalization of the classical characterizations of Wolstenholme primes:
+    for a prime p > 7, C(2p−1, p−1) ≡ 1 (mod p⁴) holds if and only if p³ divides the numerator
+    of the harmonic number H_{p−1}, and if and only if p divides the numerator of the Bernoulli
+    number B_{p−3}. It also proves Wolstenholme's theorem C(2p−1, p−1) ≡ 1 (mod p³) for primes
+    p > 3, and Glaisher's congruence 3·H_{p−1,2} ≡ 2p·B_{p−3} (mod p²). The statements of the
+    first three results are copied verbatim from Google DeepMind's Formal Conjectures. The proof
+    of the Bernoulli characterization avoids Kummer's congruences: it combines Faulhaber's formula
+    and von Staudt–Clausen with a doubling argument k ↦ 2k mod p.
+  authors:
+    - "José Cláudio da Silva Junior"
+  license: "Apache-2.0"
+  responsible_maintainers:
+    - "José Cláudio da Silva Junior"
+
+classification:
+  arxiv: ["math.NT"]
+  msc2020: ["11A41", "11B68", "11B65"]
+
+sources:
+  - title: "On certain properties of prime numbers"
+    authors:
+      - "J. Wolstenholme"
+    type: "article"
+    location: "Quarterly Journal of Pure and Applied Mathematics 5 (1862), 35–39"
+    relationship: "formalizes"
+    note: "Wolstenholme's theorem C(2p−1, p−1) ≡ 1 (mod p³) for primes p > 3."
+    author_endorsement: "n/a"
+  - title: "On the residues of the sums of products of the first p−1 numbers, and their powers, to modulus p² or p³"
+    authors:
+      - "J. W. L. Glaisher"
+    type: "article"
+    location: "Quarterly Journal of Mathematics 31 (1900), 321–353"
+    relationship: "formalizes"
+    note: >-
+      Glaisher's congruence for H_{p−1,2} modulo p². The Lean proof does not follow Glaisher's
+      argument; it uses a doubling permutation k ↦ 2k mod p.
+    author_endorsement: "n/a"
+  - title: "On the converse of Wolstenholme's theorem"
+    authors:
+      - "R. J. McIntosh"
+    type: "article"
+    location: "Acta Arithmetica 71 (1995), 381–389"
+    relationship: "background"
+    note: "Context on Wolstenholme primes and their equivalent characterizations."
+  - title: "Wolstenholme's theorem: its generalizations and extensions in the last hundred and fifty years (1862–2012)"
+    authors:
+      - "R. Meštrović"
+    id: "arXiv:1111.3057"
+    type: "article"
+    location: "https://arxiv.org/abs/1111.3057"
+    relationship: "background"
+    note: "Survey; states the harmonic and Bernoulli characterizations of Wolstenholme primes."
+
+related_formalizations:
+  - id: "https://github.com/google-deepmind/formal-conjectures/blob/main/FormalConjectures/Wikipedia/WolstenholmePrime.lean"
+    relationship: "other"
+    note: >-
+      Formal Conjectures states the first three results (the characterizations with sorry). The
+      statements here are copied verbatim from it.
+
+status:
+  scope: >-
+    Fully formalized: Wolstenholme's theorem (mod p³) for primes p > 3; the harmonic and Bernoulli
+    characterizations of Wolstenholme primes for p > 7, exactly as stated in Formal Conjectures;
+    and Glaisher's congruence for primes p ≥ 5. Nothing is weakened. The repository contains further
+    developments (Kummer.lean, Jensen.lean, RegularPrimesCheck.lean, Erdos291Check.lean) that are not
+    part of this submission's Challenge.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: []
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["Claude Opus 5.5 (Anthropic)"]
+      framework: "Claude (claude.ai agent workspace)"
+      tool_setup: >-
+        AI-assisted: the Lean code was written by Claude under the direction of the maintainer, who
+        chose the problems, the proof route (cross-checked with ChatGPT) and reviewed the results.
+        Compilation and axiom checks run in GitHub Actions.
+      cost:
+        wall_time: "several working sessions in November 2026"
+        spend_usd: "subscription-based"
+        hardware: "cloud sandbox and GitHub Actions"
+      prompting_notes: "n/a"
+  spend_usd: "subscription-based"
+  notes: >-
+    The maintainer set the goals and the mathematical route; Claude wrote the Lean proofs and the
+    informal account (PROOF.md) and audited it claim by claim against the code (AUDIT.md). The
+    maintainer reviewed the statements and CI results.
+
+fidelity:
+  divergences: >-
+    None known. The Formal Conjectures statements are copied verbatim; IsWolstenholmePrime requires
+    p > 7, as there. Glaisher's congruence is stated with Mathlib's bernoulli (B₁ = −1/2), which
+    agrees with bernoulli' at the even index p − 3.
+
+review:
+  status: "self-assessed"
+  reviewers:
+    - "none"
+  notes: >-
+    PROOF.md gives the complete informal proof; AUDIT.md checks claim by claim that it says exactly
+    what the Lean code proves. No external human review yet.
+
+alignment:
+  namespace: "WolstenholmePrime"
+  statements:
+    - source: "Wolstenholme (1862)"
+      lean: "WolstenholmePrime.wolstenholme_theorem"
+      module: "Challenge"
+      status: "proved"
+      note: "Formal Conjectures statement, verbatim."
+    - source: "Harmonic characterization of Wolstenholme primes"
+      lean: "WolstenholmePrime.wolstenholme_harmonic"
+      module: "Challenge"
+      status: "proved"
+      note: "Formal Conjectures statement, verbatim."
+    - source: "Bernoulli characterization of Wolstenholme primes"
+      lean: "WolstenholmePrime.wolstenholme_bernoulli"
+      module: "Challenge"
+      status: "proved"
+      note: "Formal Conjectures statement, verbatim."
+    - source: "Glaisher (1900)"
+      lean: "WolstenholmePrime.glaisher"
+      module: "Challenge"
+      status: "proved"
+      note: "p² divides the numerator of 3·Σ_{k<p} 1/k² − 2p·B_{p−3}, for primes p ≥ 5."
+
+acknowledgements: >-
+  Mathlib; Google DeepMind's Formal Conjectures, for the statements; the Palomar registry template.

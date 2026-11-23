@@ -1,4 +1,8 @@
-import Mathlib
+module
+
+public import Mathlib
+
+@[expose] public section
 
 /-!
 # Wolstenholme primes via harmonic numbers and Bernoulli numbers
