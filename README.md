@@ -1,5 +1,7 @@
 # Wolstenholme primes in Lean 4
 
+[![CI](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions/workflows/ci.yml/badge.svg)](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions/workflows/ci.yml)
+
 Lean 4 / Mathlib proofs of the two textbook characterisations of Wolstenholme primes stated in
 [Formal Conjectures](https://github.com/google-deepmind/formal-conjectures)
 (`FormalConjectures/Wikipedia/WolstenholmePrime.lean`), where they are currently `sorry`:
@@ -10,6 +12,25 @@ Lean 4 / Mathlib proofs of the two textbook characterisations of Wolstenholme pr
 | `wolstenholme_bernoulli` | `IsWolstenholmePrime p ↔ p > 7 ∧ p.Prime ∧ ↑p ∣ (bernoulli' (p - 3)).num` |
 
 Here `IsWolstenholmePrime p` means `p > 7`, `p` is prime, and `C(2p−1, p−1) ≡ 1 (mod p⁴)`.
+
+Mathlib's `bernoulli'` uses the convention `B₁ = +1/2`, while `bernoulli` uses `B₁ = −1/2`. They agree at
+every even index, in particular at `p − 3` for odd `p`, so the statement is the classical one.
+
+## Verification status
+
+Verified. The CI run on a clean clone
+([run 45191292172](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions/runs/45191292172)) did three things:
+
+1. It fetched the Mathlib cache for `0df444a3`.
+2. It compiled both files with `import Mathlib`, with no errors or warnings.
+3. It reported:
+
+```
+'WolstenholmePrime.wolstenholme_harmonic' depends on axioms: [propext, Classical.choice, Quot.sound]
+'WolstenholmePrime.wolstenholme_bernoulli' depends on axioms: [propext, Classical.choice, Quot.sound]
+'WolstenholmeHarmonic.wolstenholme_harmonic' depends on axioms: [propext, Classical.choice, Quot.sound]
+'WolstenholmeHarmonic.wolstenholme_bernoulli' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
 
 Both results are classical (Glaisher, 1900). What this repository adds is a complete
 formalization: no `sorry`, only Lean's standard axioms, and no use of Kummer's congruence,
@@ -49,10 +70,11 @@ and 2 is invertible mod `p`, so `p⁴ ∣ C − 1 ⇔ p³ ∣ num(H_{p−1})`. I
     `bernoulli_den_coprime`: `p` does not divide the denominator of `Bᵢ` for `i < p − 1`, which
     follows from `vonStaudt_clausen`.
 - **Step B (doubling `k ↦ 2k mod p`):** `3·H_{p−1,2} ≡ 2·Σ k^{p−3} (mod p²)`.
-  - Write `2k = r + p·f`. Mod `p²`, this gives `4/r² = 1/k² + p·f/k³` and
-    `r^{p−3} = (2k)^{p−3} − (p−3)(2k)^{p−4}·p·f`.
-  - Sum both over `k`. Three Fermat facts are used: `2^{p−1} ≡ 1`, `Σ k^{p−3} ≡ 0` and
-    `k^{p−4} ≡ k^{−3}`. With these, the `f`-term is the same in both sums (`p·Σ f_k/k³`) and cancels.
+  - Doubling permutes `1, …, p−1` mod `p`. Write `2k = r_k + p·f_k` with `f_k = ⌊2k/p⌋`. Mod `p²`, this
+    gives `4/r_k² = 1/k² + p·f_k/k³` and `r_k^{p−3} = (2k)^{p−3} − (p−3)(2k)^{p−4}·p·f_k`.
+  - Sum both over `k`, with `F = Σ f_k/k³` and `P = Σ k^{p−3}`. Three Fermat facts are used:
+    `2^{p−1} ≡ 1`, `P ≡ 0 (mod p)` and `k^{p−4} ≡ k^{−3}`. The two sums then give
+    `3·H_{p−1,2} ≡ p·F` and `2·P ≡ p·F (mod p²)`. Eliminating `F` gives the claim.
 - **Assembly:** `W ⇔ p³ ∣ H_{p−1} ⇔ p² ∣ H_{p−1,2} ⇔ p ∣ B_{p−3}`. The first step uses the pairing
   lemma; the other two use Steps B and A.
 
@@ -84,7 +106,9 @@ CI (`.github/workflows/ci.yml`) runs the same steps on every push from a clean c
 
 The formalization was written with Claude (Anthropic), under the direction of
 José Cláudio da Silva Junior, who reviewed it. The proof route was cross-checked with ChatGPT.
-Every claim above is checked by the Lean kernel; the axiom check shows that nothing is assumed.
+All four theorem declarations are kernel-checked, and the axiom audit reports only Lean's standard
+axioms (`propext`, `Classical.choice`, `Quot.sound`). As with any formal proof, the results are relative
+to the definitions used and the imported Mathlib theorems.
 
 ## License
 
