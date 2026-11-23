@@ -1,0 +1,16 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build (fetches the Mathlib cache, then compiles this project)
+        uses: leanprover/lean-action@v1
+      - name: Axioms (fails on sorryAx or any non-standard axiom)
+        run: bash scripts/check_axioms.sh

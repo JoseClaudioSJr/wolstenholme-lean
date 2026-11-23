@@ -1,0 +1,6 @@
+import FormalConjecturesCheck
+
+#print axioms WolstenholmePrime.wolstenholme_harmonic
+#print axioms WolstenholmePrime.wolstenholme_bernoulli
+#print axioms WolstenholmeHarmonic.wolstenholme_harmonic
+#print axioms WolstenholmeHarmonic.wolstenholme_bernoulli
