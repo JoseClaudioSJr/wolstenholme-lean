@@ -1,6 +1,6 @@
 name = "wolstenholme"
 defaultTargets = ["WolstenholmeHarmonic", "FormalConjecturesCheck", "Kummer", "Jensen",
-  "RegularPrimesCheck"]
+  "RegularPrimesCheck", "Erdos291Check"]
 
 [[require]]
 name = "mathlib"
@@ -21,3 +21,6 @@ name = "Jensen"
 
 [[lean_lib]]
 name = "RegularPrimesCheck"
+
+[[lean_lib]]
+name = "Erdos291Check"

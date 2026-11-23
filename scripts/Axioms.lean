@@ -1,5 +1,6 @@
 import FormalConjecturesCheck
 import RegularPrimesCheck
+import Erdos291Check
 
 #print axioms WolstenholmePrime.wolstenholme_theorem
 #print axioms WolstenholmePrime.wolstenholme_harmonic
@@ -19,3 +20,4 @@ import RegularPrimesCheck
 #print axioms WolstenholmeHarmonic.jensen_bernoulli
 #print axioms RegularPrimes.infinitude_of_irregularprimes_of_kummer
 #print axioms RegularPrimes.infinitude_of_irregularprimes_of_iff
+#print axioms Erdos291.erdos_291.variants.steinerberger_generalization

@@ -304,3 +304,29 @@ particular this follows from Kummer's criterion as stated in Formal Conjectures
 criterion) is not proved here; it needs the analytic class number formula for `ℚ(ζ_p)`. So the
 Formal Conjectures statement `infinitude_of_irregularprimes` is reduced to Kummer's criterion, not
 proved outright.
+
+## Part IV: Erdős Problem 291, Steinerberger's criterion
+
+Here `L_n = lcm(1, …, n)`, `a_n = Σ_{j=1}^{n} L_n/j` (so `H_n = a_n/L_n`), `p ≤ n` is prime,
+`e = ⌊log_p n⌋ ≥ 1` and `k = ⌊n/pᵉ⌋`, so `pᵉ ≤ n < p^{e+1}` and `1 ≤ k ≤ p − 1`. (Lean: `L`, `a`,
+copied from Formal Conjectures.)
+
+**Lemma IV.1** (`dvd_of_pow_succ_dvd_mul`). If `p^{v+1} ∤ j` and `p^{v+1} ∣ j·c` (`j, c ≠ 0`), then
+`p ∣ c`. (Compare the `p`-adic valuations of `j` and `j·c`.)
+
+**Theorem IV.2** (`erdos_291.variants.steinerberger_generalization`).
+`p ∣ gcd(a_n, L_n) ⇔ p ∣ num(Σ_{i=1}^{k} 1/i)`.
+
+*Proof.*
+
+1. `pᵉ ≤ n`, so `pᵉ ∣ L_n`; write `L_n = pᵉ·L'`. In particular `p ∣ L_n`.
+2. `p ∤ L'`. Otherwise `p^{e+1} ∣ L_n`. For each `j ≤ n`, write `L_n = j·d`; since `j < p^{e+1}`,
+   `p^{e+1} ∤ j`, so `p ∣ d` by Lemma IV.1, and `j ∣ L_n/p`. Then `L_n ∣ L_n/p < L_n`, which is
+   impossible since `L_n/p > 0`.
+3. If `pᵉ ∤ j`, write `L_n = j·d`; Lemma IV.1 (with `p^{e} ∣ j·d`) gives `p ∣ d = L_n/j`.
+4. If `j = pᵉ·m` with `j ≤ n`, then `1 ≤ m ≤ k`, `m ∣ L'` and `L_n/j = L'/m`; since `m < p`, in
+   `ℤ/p` this is `L'·m⁻¹`.
+5. Hence `a_n ≡ L'·Σ_{m=1}^{k} m⁻¹ (mod p)`. As `p ∣ L_n`, `p ∣ gcd(a_n, L_n) ⇔ p ∣ a_n`; as
+   `p ∤ L'`, this is `Σ_{m=1}^{k} m⁻¹ ≡ 0 (mod p)`, i.e. `p ∣ num(Σ_{i=1}^{k} 1/i)` (all
+   denominators are below `p`). ∎
+

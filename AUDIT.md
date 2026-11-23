@@ -82,6 +82,14 @@ statement, `PROOF.md` now states that general form.
 | III.12: easy direction of Kummer's criterion ⇒ irregular primes infinite | `RegularPrimes.infinitude_of_irregularprimes_of_kummer` | = |
 | III.12: Kummer's criterion (FC form) ⇒ irregular primes infinite | `RegularPrimes.infinitude_of_irregularprimes_of_iff` | = |
 
+## Part IV
+
+| `PROOF.md` | Lean | Match |
+|---|---|---|
+| IV.1: `p^{v+1} ∤ j`, `p^{v+1} ∣ jc` ⇒ `p ∣ c` | `Erdos291.dvd_of_pow_succ_dvd_mul` | = |
+| `L_n > 0`; `j ∣ L_n` for `1 ≤ j ≤ n` | `Erdos291.L_pos`, `Erdos291.dvd_L` | = |
+| IV.2: Steinerberger's criterion | `Erdos291.erdos_291.variants.steinerberger_generalization` (FC statement, verbatim) | = |
+
 ## Final statements
 
 | Formal Conjectures statement (copied verbatim) | Proved by | Hypotheses |
@@ -89,9 +97,10 @@ statement, `PROOF.md` now states that general form.
 | `wolstenholme_theorem` | `wolstenholme_theorem_mod_p_cube` | `p > 3`, prime (so `p ≥ 5`, since 4 is not prime) |
 | `wolstenholme_harmonic` | `wolstenholme_core` | `p > 7`, prime |
 | `wolstenholme_bernoulli` | `wolstenholme_bernoulli_core` and `bernoulli_eq_bernoulli'_of_ne_one` | `p > 7`, prime |
+| `erdos_291.variants.steinerberger_generalization` (`ErdosProblems/291.lean`) | proved directly | `p` prime, `p ≤ n` (as in FC) |
 | `infinitude_of_irregularprimes` (`RegularPrimes.lean`; definitions copied verbatim) | **not proved**: reduced to Kummer's criterion by `infinitude_of_irregularprimes_of_kummer` / `_of_iff` | the easy direction of Kummer's criterion, as a hypothesis |
 
-The CI checks that all eighteen theorems listed in `scripts/Axioms.lean` depend only on `propext`,
+The CI checks that all nineteen theorems listed in `scripts/Axioms.lean` depend only on `propext`,
 `Classical.choice` and `Quot.sound` (`scripts/check_axioms.sh`).
 
 ## Note

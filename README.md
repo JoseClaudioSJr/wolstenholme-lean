@@ -56,6 +56,8 @@ that Jensen's theorem needs; see below. Part II does not use it.)
   `ζ(2k)`) and Jensen's theorem.
 - `RegularPrimesCheck.lean`: the Formal Conjectures definitions of regular and irregular primes,
   copied verbatim, and the reduction of `infinitude_of_irregularprimes` to Kummer's criterion.
+- `Erdos291Check.lean`: the Formal Conjectures definitions for Erdős Problem 291, copied verbatim,
+  and a proof of `erdos_291.variants.steinerberger_generalization` (see below).
 - `scripts/check_axioms.sh`: fails unless every theorem listed in `scripts/Axioms.lean` depends only on
   `propext`, `Classical.choice` and `Quot.sound`. This also catches any `sorry`.
 
@@ -88,6 +90,18 @@ The steps, all in `Kummer.lean` except the last:
    `p > P`, and `p ∤ n`; by 3, `p ∣ B_{n mod (p−1)}`.
 6. `one_lt_abs_bernoulli` (`Jensen.lean`): the numerator of `B_n` is not `±1`, because
    `|B_{2k}| = 2·(2k)!·ζ(2k)/(2π)^{2k} ≥ 2·(2k)!/(2π)^{2k} > 1` for large `k`.
+
+## Erdős Problem 291: Steinerberger's criterion
+
+Write `L_n = lcm(1, …, n)` and `1 + 1/2 + ⋯ + 1/n = a_n / L_n`. Formal Conjectures states
+(`erdos_291.variants.steinerberger_generalization`, category *research solved*, with `sorry`):
+for a prime `p ≤ n`, with `k` the leading digit of `n` in base `p`,
+`p ∣ gcd(a_n, L_n) ⇔ p ∣ num(1 + 1/2 + ⋯ + 1/k)`. `Erdos291Check.lean` proves it.
+
+With `e = ⌊log_p n⌋`: `L_n = pᵉ·L'` with `p ∤ L'` (if `p ∣ L'`, every `j ≤ n` would divide
+`L_n/p`). In `a_n = Σ_{j ≤ n} L_n/j`, the terms with `pᵉ ∤ j` are divisible by `p`, and the terms
+`j = pᵉ·m`, `1 ≤ m ≤ k`, equal `L'/m`. So `a_n ≡ L'·H_k (mod p)`; since `p ∣ L_n` and `p ∤ L'`, the
+criterion follows. The same file reuses the reduction of rationals into `ZMod p`.
 
 ## Proof strategy
 
