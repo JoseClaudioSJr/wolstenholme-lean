@@ -28,7 +28,7 @@ every even index, in particular at `p − 3` for odd `p`, so the statement is th
 ## Verification status
 
 Every push runs CI on a clean clone ([Actions](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions)).
-The CI fetches the Mathlib cache for `0df444a3`, compiles everything with `import Mathlib`, and
+The CI fetches the Mathlib cache for Mathlib `v4.36.0`, compiles everything, and
 runs `scripts/check_axioms.sh`. The script prints `#print axioms` for every exported theorem and
 fails unless each depends only on `[propext, Classical.choice, Quot.sound]`. The first run
 ([45191292172](https://github.com/JoseClaudioSJr/wolstenholme-lean/actions/runs/45191292172))
@@ -36,7 +36,8 @@ compiled with no errors or warnings.
 
 All three results are classical (Wolstenholme 1862, Glaisher 1900). What this repository adds is a complete
 formalization: no `sorry`, only Lean's standard axioms, and no use of Kummer's congruence,
-which Mathlib does not have.
+which Mathlib does not have. (The repository now also proves the case of Kummer's congruence
+that Jensen's theorem needs; see below. Part II does not use it.)
 
 ## Files
 
@@ -49,8 +50,60 @@ which Mathlib does not have.
 - `FormalConjecturesCheck.lean`: the Formal Conjectures definition and all three statements, copied
   verbatim in their own namespace (Apache-2.0, see the file header), each proved in a few lines
   from the main file.
-- `scripts/check_axioms.sh`: fails unless all ten theorems listed in `scripts/Axioms.lean` depend only on
+- `Kummer.lean`: Faulhaber mod `p²` for all exponents, Voronoi's congruence, the case of Kummer's
+  congruence used by Jensen, and Jensen's argument (see the next section).
+- `Jensen.lean`: the analytic input (`|B_{2k}| > 1` for large `k`, from Mathlib's formula for
+  `ζ(2k)`) and Jensen's theorem.
+- `RegularPrimesCheck.lean`: the Formal Conjectures definitions of regular and irregular primes,
+  copied verbatim, and the reduction of `infinitude_of_irregularprimes` to Kummer's criterion.
+- `Erdos291Check.lean`: the Formal Conjectures definitions for Erdős Problem 291, copied verbatim,
+  and a proof of `erdos_291.variants.steinerberger_generalization` (see below).
+- `Challenge.lean`, `comparator.json`, `formalization.yaml`: the Palomar submission (see below).
+  `FormalConjecturesCheck.lean` is its Solution module.
+- `scripts/check_axioms.sh`: fails unless every theorem listed in `scripts/axioms.txt` depends only on
   `propext`, `Classical.choice` and `Quot.sound`. This also catches any `sorry`.
+
+## Kummer's congruence and Jensen's theorem
+
+**Jensen's theorem (1915)** (`jensen_bernoulli`): infinitely many primes `p` divide the numerator of
+some Bernoulli number `B_k` with `k` even and `2 ≤ k ≤ p − 3`.
+
+By Kummer's criterion these are exactly the irregular primes. Formal Conjectures states the
+criterion (`isRegularPrime_iff_Bernoulli`) and the infinitude of irregular primes
+(`infinitude_of_irregularprimes`), both with `sorry`; the definition of a regular prime there uses
+the class group of the cyclotomic field. `RegularPrimesCheck.lean` proves that the infinitude
+follows from the easy direction of the criterion (`p ∣ B_k` ⇒ `p` irregular). That direction needs
+the class number formula for cyclotomic fields and is **not** proved here.
+
+The steps, all in `Kummer.lean` except the last:
+
+1. `sum_pow_eq_p_mul_bernoulli`: `Σ_{k=1}^{p−1} kⁿ ≡ p·B_n (mod p²)` for every even `n ≥ 2` with
+   `(p − 1) ∤ n` (`p ≥ 5`). Unlike Step A above, `n` may exceed `p`, so some `Bᵢ` in Faulhaber's
+   formula have `p` in the denominator; `p·Bᵢ` is always `p`-integral, and `p^(m−3)/m` is
+   `p`-integral for `m ≥ 3`.
+2. `voronoi_mod_p` (Voronoi's congruence): for `p ∤ a`,
+   `(aⁿ − 1)·B_n ≡ n·a^{n−1}·Σ_{k=1}^{p−1} ⌊ak/p⌋·k^{n−1} (mod p)`. This is Step B above with `2`
+   replaced by any `a` and `p − 3` by any `n`.
+3. `kummer_dvd`: if `p ∤ n`, `(p − 1) ∤ n` and `p ∣ B_n`, then `p ∣ B_{n mod (p−1)}`. Take `a` a
+   primitive root; the right side of Voronoi's congruence depends only on `n mod (p − 1)`.
+4. `dvd_den_bernoulli`: if `(p − 1) ∣ 2k`, then `p` divides the denominator of `B_{2k}`.
+5. `exists_irregular_gt` (Jensen's argument): given `P`, let `M = ∏_{q ≤ P prime} (q − 1)` and
+   `n = 2·2^K·M`. A prime `p` dividing the numerator of `B_n` has `(p − 1) ∤ n` (by 4), hence
+   `p > P`, and `p ∤ n`; by 3, `p ∣ B_{n mod (p−1)}`.
+6. `one_lt_abs_bernoulli` (`Jensen.lean`): the numerator of `B_n` is not `±1`, because
+   `|B_{2k}| = 2·(2k)!·ζ(2k)/(2π)^{2k} ≥ 2·(2k)!/(2π)^{2k} > 1` for large `k`.
+
+## Erdős Problem 291: Steinerberger's criterion
+
+Write `L_n = lcm(1, …, n)` and `1 + 1/2 + ⋯ + 1/n = a_n / L_n`. Formal Conjectures states
+(`erdos_291.variants.steinerberger_generalization`, category *research solved*, with `sorry`):
+for a prime `p ≤ n`, with `k` the leading digit of `n` in base `p`,
+`p ∣ gcd(a_n, L_n) ⇔ p ∣ num(1 + 1/2 + ⋯ + 1/k)`. `Erdos291Check.lean` proves it.
+
+With `e = ⌊log_p n⌋`: `L_n = pᵉ·L'` with `p ∤ L'` (if `p ∣ L'`, every `j ≤ n` would divide
+`L_n/p`). In `a_n = Σ_{j ≤ n} L_n/j`, the terms with `pᵉ ∤ j` are divisible by `p`, and the terms
+`j = pᵉ·m`, `1 ≤ m ≤ k`, equal `L'/m`. So `a_n ≡ L'·H_k (mod p)`; since `p ∣ L_n` and `p ∤ L'`, the
+criterion follows. The same file reuses the reduction of rationals into `ZMod p`.
 
 ## Proof strategy
 
@@ -89,6 +142,10 @@ and 2 is invertible mod `p`, so `p⁴ ∣ C − 1 ⇔ p³ ∣ num(H_{p−1})`. I
 - J. W. L. Glaisher, *Congruences relating to the sums of product of the first n numbers and to
   other sums of product*, Quart. J. Math. 31 (1900), 1–35; and *On the residues of the sums of
   products of the first p−1 numbers, and their powers, to modulus p² or p³*, ibid., 321–353.
+- K. L. Jensen, *Om talteoretiske Egenskaber ved de Bernoulliske Tal*, Nyt Tidsskr. Mat. B 26
+  (1915), 73–83.
+- L. C. Washington, *Introduction to Cyclotomic Fields*, 2nd ed., GTM 83, Springer, 1997, ch. 5
+  (Kummer's congruences, Voronoi's congruence, irregular primes).
 - E. Lehmer, *On congruences involving Bernoulli numbers and the quotients of Fermat and Wilson*,
   Ann. of Math. 39 (1938), 350–360. Sums weighted by `⌊ak/p⌋`, of the kind used in Step B.
 - R. Meštrović, *Wolstenholme's theorem: its generalizations and extensions in the last hundred
@@ -96,16 +153,31 @@ and 2 is invertible mod `p`, so `p⁴ ∣ C − 1 ⇔ p³ ∣ num(H_{p−1})`. I
 
 ## Building
 
-Requires [elan](https://github.com/leanprover/elan). The toolchain (`leanprover/lean4:v4.33.1`) and
-Mathlib (`0df444a3`, the commit Formal Conjectures uses) are pinned.
+Requires [elan](https://github.com/leanprover/elan). The toolchain (`leanprover/lean4:v4.36.0`) and
+Mathlib (`v4.36.0`) are pinned. Every `.lean` file uses Lean's module system, as Palomar requires.
+(The commit linked from the Formal Conjectures pull request, `05c68d7`, used Lean `v4.33.1` and
+Mathlib `0df444a3`, the versions Formal Conjectures pinned at the time.)
 
 ```sh
 lake exe cache get      # downloads compiled Mathlib
 lake build              # compiles this project
 bash scripts/check_axioms.sh
+./scripts/verify-comparator.sh   # Palomar's check: Challenge vs Solution (needs Linux and bwrap)
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same steps on every push from a clean clone.
+CI (`.github/workflows/ci.yml`) runs the same steps on every push from a clean clone, plus
+Palomar's source-requirements check and the `formalization.yaml` validator.
+
+## Palomar submission
+
+`Challenge.lean` is the statement surface: it imports only Mathlib and states, with `sorry`, the
+three Formal Conjectures statements (`wolstenholme_theorem`, `wolstenholme_harmonic`,
+`wolstenholme_bernoulli`, verbatim) and Glaisher's congruence (`glaisher`). `comparator.json`
+names these four theorems and the permitted axioms (`propext`, `Quot.sound`, `Classical.choice`).
+`lake comparator` checks that `FormalConjecturesCheck.lean` proves exactly these statements; in CI
+it prints `Your solution is okay!`. `formalization.yaml` records sources, authorship, the use of
+AI, scope and review status. Submissions go through the form at
+https://submit.palomar-registry.org/, with the full commit SHA.
 
 ## Authorship and use of AI
 

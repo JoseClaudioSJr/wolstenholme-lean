@@ -1,4 +1,8 @@
-import Mathlib
+module
+
+public import Mathlib
+
+@[expose] public section
 
 /-!
 # Wolstenholme primes via harmonic numbers and Bernoulli numbers
@@ -46,7 +50,7 @@ A human-readable proof, with no Lean, is in `PROOF.md`.
    (`p³ ∣ num H_{p−1} ⇔ p² ∣ num H_{p−1,2}`), `glaisher` (`3·H_{p−1,2} ≡ 2p·B_{p−3} (mod p²)`),
    and `voronoiF_mod_p` (`Σ ⌊2k/p⌋/k³ ≡ 2·B_{p−3} (mod p)`).
 
-Toolchain: Lean v4.33.1, Mathlib 0df444a3 (as in Formal Conjectures). No `sorry`; both final
+Toolchain: Lean v4.36.0, Mathlib v4.36.0 (see `lean-toolchain`, `lakefile.toml`). No `sorry`; both final
 theorems depend only on [propext, Classical.choice, Quot.sound]. `IsWolstenholmePrime` here is a
 verbatim copy of the Formal Conjectures definition; `FormalConjecturesCheck.lean` applies both
 theorems to the original statements.
@@ -417,7 +421,7 @@ theorem harmonic_den_dvd_factorial (n : ℕ) : (harmonic n).den ∣ n.factorial 
   | succ n ih =>
     rw [harmonic_succ, Nat.factorial_succ]
     refine (Rat.add_den_dvd _ _).trans ?_
-    rw [Rat.inv_natCast_den, if_neg (Nat.succ_ne_zero n), mul_comm]
+    rw [Rat.inv_natCast_den, ite_eq_right (Nat.succ_ne_zero n), mul_comm]
     exact Nat.mul_dvd_mul_left _ ih
 
 /-- (B1) The denominator of `H_{p-1}` is prime to `p` (it divides `(p-1)!`). -/
@@ -462,7 +466,7 @@ theorem ratToZMod_harmonic_le (n : ℕ) :
     rw [harmonic_succ, ratToZMod_add _ _ (cop _ (hden k (by omega))) ?_ ?_, ih (by omega),
       Finset.sum_range_succ, ratToZMod_inv_natCast _ (cop _ hk1)]
     · rfl
-    · rw [Rat.inv_natCast_den, if_neg (Nat.succ_ne_zero k)]; exact cop _ hk1
+    · rw [Rat.inv_natCast_den, ite_eq_right (Nat.succ_ne_zero k)]; exact cop _ hk1
     · rw [← harmonic_succ]; exact cop _ (hden (k + 1) hk)
 
 /-- (B3) `H_{p-1}` reduces to the power sum `S₁`. -/
@@ -1071,7 +1075,7 @@ theorem bernoulli_den_coprime (a : ℕ) {i : ℕ} (hi : i < p - 1) :
       rw [Rat.neg_den]
       refine coprime_den_sum _ _ fun q hq => ?_
       rw [Finset.mem_filter, Finset.mem_range] at hq
-      rw [one_div, Rat.inv_natCast_den, if_neg hq.2.1.ne_zero]
+      rw [one_div, Rat.inv_natCast_den, ite_eq_right hq.2.1.ne_zero]
       exact coprime_of_pos_lt a hq.2.1.pos (by omega)
   · rcases Nat.lt_or_ge 1 i with h1 | h1
     · rw [bernoulli_eq_zero_of_odd hodd h1]; simp
@@ -1080,7 +1084,7 @@ theorem bernoulli_den_coprime (a : ℕ) {i : ℕ} (hi : i < p - 1) :
       subst this
       rw [bernoulli_one, show (-1 / 2 : ℚ) = ((-1 : ℤ) : ℚ) * ((2 : ℕ) : ℚ)⁻¹ by push_cast; ring]
       refine coprime_den_mul (coprime_den_intCast _) ?_
-      rw [Rat.inv_natCast_den, if_neg two_ne_zero]
+      rw [Rat.inv_natCast_den, ite_eq_right two_ne_zero]
       exact coprime_of_pos_lt a (by norm_num) (by omega)
 
 /-- Step A (Faulhaber + von Staudt): `∑_{k=1}^{p-1} k^{p-3} ≡ p·B_{p-3} (mod p²)`. -/
@@ -1119,7 +1123,7 @@ theorem sum_pow_p_sub_three (hp5 : 5 ≤ p) :
     refine coprime_den_mul (coprime_den_mul (coprime_den_mul
       (bernoulli_den_coprime 2 (by omega)) (coprime_den_natCast _)) ?_) ?_
     · rw [← Nat.cast_pow]; exact coprime_den_natCast _
-    · rw [Rat.inv_natCast_den, if_neg (by omega)]
+    · rw [Rat.inv_natCast_den, ite_eq_right (by omega)]
       exact coprime_of_pos_lt 2 (by omega) (by omega)
   have hcop2 : Nat.Coprime (p - 2) (p ^ 2) := coprime_of_pos_lt 2 (by omega) (by omega)
   have hterm : ∀ i ∈ range (p - 2), ratToZMod (p ^ 2)
@@ -1131,7 +1135,7 @@ theorem sum_pow_p_sub_three (hp5 : 5 ≤ p) :
     have hBi := bernoulli_den_coprime (p := p) 2 (i := i) (by omega)
     rw [div_eq_mul_inv, ← Nat.cast_pow,
       ratToZMod_mul _ _ (coprime_den_mul (coprime_den_mul hBi (coprime_den_natCast _))
-        (coprime_den_natCast _)) (by rw [Rat.inv_natCast_den, if_neg (by omega)]; exact hcop2),
+        (coprime_den_natCast _)) (by rw [Rat.inv_natCast_den, ite_eq_right (by omega)]; exact hcop2),
       ratToZMod_mul _ _ (coprime_den_mul hBi (coprime_den_natCast _)) (coprime_den_natCast _),
       ratToZMod_mul _ _ hBi (coprime_den_natCast _), ratToZMod_natCast, ratToZMod_natCast,
       ratToZMod_inv_natCast _ hcop2, Nat.cast_pow]
@@ -1307,7 +1311,7 @@ theorem harmonic2_den_dvd (n : ℕ) : (harmonic2 n).den ∣ n.factorial ^ 2 := b
   | succ n ih =>
     rw [harmonic2_succ, Nat.factorial_succ, mul_pow]
     refine (Rat.add_den_dvd _ _).trans ?_
-    rw [Rat.inv_natCast_den, if_neg (pow_ne_zero 2 (Nat.succ_ne_zero n)), mul_comm]
+    rw [Rat.inv_natCast_den, ite_eq_right (pow_ne_zero 2 (Nat.succ_ne_zero n)), mul_comm]
     exact Nat.mul_dvd_mul_left _ ih
 
 

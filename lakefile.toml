@@ -1,13 +1,29 @@
 name = "wolstenholme"
-defaultTargets = ["WolstenholmeHarmonic", "FormalConjecturesCheck"]
+defaultTargets = ["WolstenholmeHarmonic", "FormalConjecturesCheck", "Kummer", "Jensen",
+  "RegularPrimesCheck", "Erdos291Check", "Challenge"]
 
 [[require]]
 name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4"
-rev = "0df444a360eaa60ab8c11dca51a86af692955474"
+rev = "v4.36.0"
 
 [[lean_lib]]
 name = "WolstenholmeHarmonic"
 
 [[lean_lib]]
 name = "FormalConjecturesCheck"
+
+[[lean_lib]]
+name = "Kummer"
+
+[[lean_lib]]
+name = "Jensen"
+
+[[lean_lib]]
+name = "RegularPrimesCheck"
+
+[[lean_lib]]
+name = "Erdos291Check"
+
+[[lean_lib]]
+name = "Challenge"

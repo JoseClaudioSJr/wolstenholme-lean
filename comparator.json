@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge",
+  "solution_module": "FormalConjecturesCheck",
+  "theorem_names": [
+    "WolstenholmePrime.wolstenholme_theorem",
+    "WolstenholmePrime.wolstenholme_harmonic",
+    "WolstenholmePrime.wolstenholme_bernoulli",
+    "WolstenholmePrime.glaisher"
+  ],
+  "definition_names": [],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+  "enable_nanoda": true
+}

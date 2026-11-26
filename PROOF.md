@@ -1,11 +1,12 @@
 # The proof, without Lean
 
-This is a self-contained mathematical account of what `WolstenholmeHarmonic.lean` proves. Each
-step names the Lean declaration that formalizes it, so the two can be read side by side. None of
-the results are new; see the references in the README.
+This is a self-contained mathematical account of what `WolstenholmeHarmonic.lean` (Parts I and II)
+and `Kummer.lean`, `Jensen.lean`, `RegularPrimesCheck.lean` (Part III) prove. Each step names the
+Lean declaration that formalizes it, so the two can be read side by side. None of the results are
+new; see the references in the README.
 
-Throughout, `p ≥ 5` is a prime. (The Formal Conjectures statements assume `p > 7`, which is
-stronger.)
+Throughout Parts I and II, `p ≥ 5` is a prime. (The Formal Conjectures statements assume `p > 7`,
+which is stronger.) Part III states its hypotheses on `p` lemma by lemma.
 
 ## Notation
 
@@ -193,3 +194,139 @@ It agrees with `bernoulli` at every index `≠ 1`, in particular at `p − 3`.
   sum `F = Σ ⌊2k/p⌋/k³` (Lean: `voronoiF`, `voronoiF_mod_p`).
 - Every step works in `ℤ/pⁿ`, and rationals enter only through the reduction map. This is why
   the Lean file separates a generic layer for reducing rationals from the number theory.
+
+## Part III: Kummer's congruence (weak form) and Jensen's theorem
+
+Here `p` is a prime, `B_n` is Mathlib's `bernoulli n` (`B₁ = −1/2`), and "`q` is `p`-integral"
+means that `p` does not divide the denominator of the rational `q`. In this part the exponent `n`
+may be much larger than `p`.
+
+**Lemma III.1** (`bernoulli_den_coprime_of_not_dvd`). If `(p − 1) ∤ n`, then `B_n` is `p`-integral.
+
+*Proof.* For odd `n ≥ 3`, `B_n = 0`. For `n = 1`, `(p − 1) ∤ 1` forces `p ≠ 2`, and `B₁ = −1/2`.
+For `n = 2k`, von Staudt–Clausen gives `B_n = z − Σ 1/q` with `z ∈ ℤ`, over the primes `q` with
+`(q − 1) ∣ n`; `p` is not among them, so every `1/q` is `p`-integral. ∎
+
+**Lemma III.2** (`coprime_den_p_mul_bernoulli`, `p ≥ 3`). `p·B_i` is `p`-integral for every `i`.
+
+*Proof.* The same cases. For `i = 2k`, `p·B_i = pz − Σ p/q`, and `p/q` equals `1` if `q = p`
+and is `p`-integral otherwise. ∎
+
+**Lemma III.3** (`coprime_den_pow_div`, `p ≥ 5`). For `m ≥ 3`, `p^{m−3}/m` is `p`-integral.
+
+*Proof.* Write `m = pᵉ·m'` with `p ∤ m'`. If `e ≥ 1`, then `e + 3 ≤ 5ᵉ ≤ pᵉ ≤ m`; if `e = 0`, then
+`e + 3 ≤ m` by hypothesis. So `p^{m−3}/m = p^{m−3−e}/m'`. ∎
+
+**Proposition III.4** (`sum_pow_eq_p_mul_bernoulli`). Let `p ≥ 5` and let `n ≥ 2` be even with
+`(p − 1) ∤ n`. Then `Σ_{k=1}^{p−1} kⁿ ≡ p·B_n (mod p²)`.
+
+*Proof.* Faulhaber (`sum_range_pow`): `Σ_{k<p} kⁿ = Σ_{i=0}^{n} t_i` with
+`t_i = B_i·C(n+1, i)·p^{n+1−i}/(n+1)`. The last term is `t_n = p·B_n`, and `B_n` is
+`p`-integral by Lemma III.1. For `i < n`, the identity `C(n, i)·(n+1) = C(n+1, i)·(n+1−i)` gives
+`t_i = p²·u_i` with `u_i = B_i·C(n, i)·p^{n−1−i}/(n+1−i)`, and `u_i` is `p`-integral:
+
+- if `i = n − 1`, then `u_i = B_{n−1}·C(n, n−1)/2`; here `n − 1` is odd and `p − 1` is even, so
+  `(p − 1) ∤ (n − 1)` and Lemma III.1 applies;
+- if `i ≤ n − 2`, then `m = n + 1 − i ≥ 3` and `u_i = (p·B_i)·C(n, i)·(p^{m−3}/m)`, which is
+  `p`-integral by Lemmas III.2 and III.3.
+
+Reducing mod `p²` kills every `t_i` with `i < n`. ∎
+
+**Lemma III.5** (`sum_range_mul`). If `p ∤ a`, then `k ↦ ak mod p` permutes `1, …, p−1`.
+
+**Proposition III.6** (`voronoi_sq`). If `p ∤ a`, then for every `n`, in `ℤ/p²`,
+
+    (aⁿ − 1)·Σ_{k=1}^{p−1} kⁿ = n·p·a^{n−1}·Σ_{k=1}^{p−1} ⌊ak/p⌋·k^{n−1}.
+
+*Proof.* Write `ak = r_k + p·f_k` with `r_k = ak mod p` and `f_k = ⌊ak/p⌋`. Since `(p·f_k)² ≡ 0`,
+`r_kⁿ = (ak − p f_k)ⁿ ≡ aⁿkⁿ − n·a^{n−1}k^{n−1}·p·f_k (mod p²)`. Sum over `k`; by Lemma III.5 the
+left side sums to `Σ kⁿ`. ∎
+
+**Theorem III.7** (`voronoi_mod_p`, Voronoi's congruence). Let `p ≥ 5`, `p ∤ a`, and `n ≥ 2` even
+with `(p − 1) ∤ n`. Then
+
+    (aⁿ − 1)·B_n ≡ n·a^{n−1}·Σ_{k=1}^{p−1} ⌊ak/p⌋·k^{n−1}   (mod p).
+
+*Proof.* Substitute Proposition III.4 into Proposition III.6: `p·X ≡ 0 (mod p²)` with `X` the
+difference of the two sides, so `X ≡ 0 (mod p)` (`castHom_eq_zero_of_p_mul`). ∎
+
+**Theorem III.8** (`kummer_dvd`, the case of Kummer's congruence used by Jensen). Let `p ≥ 5` and
+let `n ≥ 2` be even with `(p − 1) ∤ n` and `p ∤ n`. If `p ∣ num(B_n)`, then `p ∣ num(B_k)` for
+`k = n mod (p − 1)`. Moreover `k` is even and `2 ≤ k ≤ p − 3` (`mod_sub_one_facts`).
+
+*Proof.* Let `g` generate `(ℤ/p)ˣ`, so `g` has order `p − 1`, and let `a` be an integer lift of
+`g`. Theorem III.7 applies to `n` and to `k`. Write `n = k + (p − 1)q`; by Fermat, `aⁿ ≡ aᵏ`,
+`a^{n−1} ≡ a^{k−1}` and `j^{n−1} ≡ j^{k−1}` for `1 ≤ j ≤ p−1`, so the two right-hand sums agree;
+call it `G`. Since `B_n ≡ 0` and `p ∤ n`, Theorem III.7 for `n` gives `a^{k−1}·G ≡ 0`; then
+Theorem III.7 for `k` gives `(aᵏ − 1)·B_k ≡ 0`. Finally `aᵏ ≢ 1`, because `(p − 1) ∤ k`. ∎
+
+**Lemma III.9** (`dvd_den_bernoulli`). If `k ≥ 1` and `(p − 1) ∣ 2k`, then `p` divides the
+denominator of `B_{2k}`.
+
+*Proof.* Here `p` is one of the primes in von Staudt–Clausen, so
+`1 + p·B_{2k} + Σ_{q ≠ p} p/q = p·z`. If `B_{2k}` were `p`-integral, reducing mod `p` would give
+`1 ≡ 0`. ∎
+
+**Lemma III.10** (`one_lt_abs_bernoulli`). `|B_{2k}| > 1` for all large `k`.
+
+*Proof.* Euler's formula (Mathlib's `hasSum_zeta_nat`) gives
+`ζ(2k) = (−1)^{k+1}·2^{2k−1}·π^{2k}·B_{2k}/(2k)!`, and `ζ(2k) ≥ 1` (its first term is 1). Hence
+`|B_{2k}| ≥ (2k)!/(2^{2k−1}π^{2k}) = 2·(2k)!/(2π)^{2k}`, which exceeds `2` once
+`(2π)^{2k}/(2k)! < 1` (`FloorSemiring.tendsto_pow_div_factorial_atTop`). The argument is written
+for an arbitrary `x > 0` in place of `π` in `one_lt_abs_bernoulli_of`. ∎
+
+**Theorem III.11** (Jensen, 1915; `exists_irregular_gt`, `infinite_bernoulli_irregular`,
+`jensen_bernoulli`). For every `P` there is a prime `p > P` and an even `k` with `2 ≤ k ≤ p − 3`
+such that `p ∣ num(B_k)`. In particular there are infinitely many such primes.
+
+*Proof.* Let `M = ∏_{q ≤ max(P, 4), q prime} (q − 1)` and `n = 2·2ᴷ·M`, with `K` from
+Lemma III.10 (so `n/2 ≥ K`). Since `|B_n| > 1`, the numerator of `B_n` is not `±1`; let `p` be a
+prime factor of it.
+
+- `p` does not divide the denominator of `B_n` (numerator and denominator are coprime), so
+  `(p − 1) ∤ n` by Lemma III.9.
+- Hence `p > max(P, 4)`: every prime `q ≤ max(P, 4)` has `(q − 1) ∣ M ∣ n`. In particular
+  `p ≥ 5`.
+- `p ∤ n`: the prime factors of `n` are `2` and the prime factors of the numbers `q − 1`, all
+  smaller than `p`.
+
+Theorem III.8 then gives `p ∣ num(B_k)` for `k = n mod (p − 1)`, with `k` even and
+`2 ≤ k ≤ p − 3`; and `bernoulli' k = bernoulli k` since `k ≠ 1`. ∎
+
+**Corollary III.12** (`infinitude_of_irregularprimes_of_kummer`,
+`infinitude_of_irregularprimes_of_iff`). With the Formal Conjectures definitions (`p` is regular
+when it is prime to the class number of `ℚ(ζ_p)`): if every prime `p` dividing some `num(B_k)`,
+`k` even, `2 ≤ k ≤ p − 3`, is irregular, then there are infinitely many irregular primes. In
+particular this follows from Kummer's criterion as stated in Formal Conjectures
+(`isRegularPrime_iff_Bernoulli`).
+
+*What is not proved.* The hypothesis of Corollary III.12 (the easy direction of Kummer's
+criterion) is not proved here; it needs the analytic class number formula for `ℚ(ζ_p)`. So the
+Formal Conjectures statement `infinitude_of_irregularprimes` is reduced to Kummer's criterion, not
+proved outright.
+
+## Part IV: Erdős Problem 291, Steinerberger's criterion
+
+Here `L_n = lcm(1, …, n)`, `a_n = Σ_{j=1}^{n} L_n/j` (so `H_n = a_n/L_n`), `p ≤ n` is prime,
+`e = ⌊log_p n⌋ ≥ 1` and `k = ⌊n/pᵉ⌋`, so `pᵉ ≤ n < p^{e+1}` and `1 ≤ k ≤ p − 1`. (Lean: `L`, `a`,
+copied from Formal Conjectures.)
+
+**Lemma IV.1** (`dvd_of_pow_succ_dvd_mul`). If `p^{v+1} ∤ j` and `p^{v+1} ∣ j·c` (`j, c ≠ 0`), then
+`p ∣ c`. (Compare the `p`-adic valuations of `j` and `j·c`.)
+
+**Theorem IV.2** (`erdos_291.variants.steinerberger_generalization`).
+`p ∣ gcd(a_n, L_n) ⇔ p ∣ num(Σ_{i=1}^{k} 1/i)`.
+
+*Proof.*
+
+1. `pᵉ ≤ n`, so `pᵉ ∣ L_n`; write `L_n = pᵉ·L'`. In particular `p ∣ L_n`.
+2. `p ∤ L'`. Otherwise `p^{e+1} ∣ L_n`. For each `j ≤ n`, write `L_n = j·d`; since `j < p^{e+1}`,
+   `p^{e+1} ∤ j`, so `p ∣ d` by Lemma IV.1, and `j ∣ L_n/p`. Then `L_n ∣ L_n/p < L_n`, which is
+   impossible since `L_n/p > 0`.
+3. If `pᵉ ∤ j`, write `L_n = j·d`; Lemma IV.1 (with `p^{e} ∣ j·d`) gives `p ∣ d = L_n/j`.
+4. If `j = pᵉ·m` with `j ≤ n`, then `1 ≤ m ≤ k`, `m ∣ L'` and `L_n/j = L'/m`; since `m < p`, in
+   `ℤ/p` this is `L'·m⁻¹`.
+5. Hence `a_n ≡ L'·Σ_{m=1}^{k} m⁻¹ (mod p)`. As `p ∣ L_n`, `p ∣ gcd(a_n, L_n) ⇔ p ∣ a_n`; as
+   `p ∤ L'`, this is `Σ_{m=1}^{k} m⁻¹ ≡ 0 (mod p)`, i.e. `p ∣ num(Σ_{i=1}^{k} 1/i)` (all
+   denominators are below `p`). ∎
+
