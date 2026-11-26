@@ -107,7 +107,14 @@ review:
     - "none"
   notes: >-
     PROOF.md gives the complete informal proof; AUDIT.md checks claim by claim that it says exactly
-    what the Lean code proves. No external human review yet.
+    what the Lean code proves. No independent human audit of the proofs has been done. Limited
+    human review: in Formal Conjectures PR #8200
+    (https://github.com/google-deepmind/formal-conjectures/pull/8200), approved on 2026-11-23, the
+    reviewer bocowgill checked that the linked declarations of wolstenholme_harmonic and
+    wolstenholme_bernoulli match the Formal Conjectures statements and the definition of
+    IsWolstenholmePrime, that the Lean and Mathlib pins match, and that the linked CI log shows only
+    the standard axioms. That review covered statement fidelity and integration only; it is not an
+    independent validation of the mathematical proofs.
 
 alignment:
   namespace: "WolstenholmePrime"

@@ -50,7 +50,7 @@ A human-readable proof, with no Lean, is in `PROOF.md`.
    (`p³ ∣ num H_{p−1} ⇔ p² ∣ num H_{p−1,2}`), `glaisher` (`3·H_{p−1,2} ≡ 2p·B_{p−3} (mod p²)`),
    and `voronoiF_mod_p` (`Σ ⌊2k/p⌋/k³ ≡ 2·B_{p−3} (mod p)`).
 
-Toolchain: Lean v4.33.1, Mathlib 0df444a3 (as in Formal Conjectures). No `sorry`; both final
+Toolchain: Lean v4.36.0, Mathlib v4.36.0 (see `lean-toolchain`, `lakefile.toml`). No `sorry`; both final
 theorems depend only on [propext, Classical.choice, Quot.sound]. `IsWolstenholmePrime` here is a
 verbatim copy of the Formal Conjectures definition; `FormalConjecturesCheck.lean` applies both
 theorems to the original statements.
